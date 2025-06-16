@@ -240,6 +240,20 @@ class PlayerMPD:
     def connect(self):
         self.mpd_client.connect(self.mpd_host, 6600)
 
+    def decode_repeat_mode(self):
+        """
+        Decodes the replay action from the configuration file and sets it accordingly.
+        """
+        cfg_repeat_action = cfg.setndefault('playermpd', 'repeat_mode', 'alias', value='off').lower()
+        valid_replay_actions = ['toggle', 'toggle_repeat' ,'toggle_repeat_single', 'enable_repeat', 'enable_repeat_single', 'disable']
+
+        if cfg_repeat_action not in valid_replay_actions:
+            logger.error(f"Config playermpd.replay_action must be one of {valid_replay_actions}. Ignoring setting.")
+        else:
+            self.repeat(cfg_repeat_action)
+
+        logger.info(f"Repeat action set to: {cfg_repeat_action}")
+
     def decode_2nd_swipe_option(self):
         cfg_2nd_swipe_action = cfg.setndefault('playermpd', 'second_swipe_action', 'alias', value='none').lower()
         if cfg_2nd_swipe_action not in [*self.second_swipe_action_dict.keys(), 'none', 'custom']:
@@ -524,10 +538,24 @@ class PlayerMPD:
 
     @plugs.tag
     def play_single(self, song_url):
+        # Harmonize the song URL to ensure it matches the MPD database format
+        song_url = self.harmonize_mpd_url(song_url)
+
+        # Check if this is a second swipe
         with self.mpd_lock:
-            self.mpd_client.clear()
-            self.mpd_client.addid(song_url)
-            self.mpd_client.play()
+            is_second_swipe = self.music_player_status['player_status'].get('CURRENTFILENAME') == song_url
+
+        if self.second_swipe_action is not None and is_second_swipe:
+            logger.debug('Calling second swipe action for play_single')
+            self.second_swipe_action()
+        else:
+            logger.debug('Calling first swipe action for play_single')
+            with self.mpd_lock:
+                self.mpd_client.clear()
+                self.mpd_client.addid(song_url)
+                self.mpd_client.play()
+            # Update the last played song in the status
+            self.music_player_status['player_status']['CURRENTFILENAME'] = song_url
 
     @plugs.tag
     def resume(self):
