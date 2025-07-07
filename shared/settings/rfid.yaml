@@ -8,7 +8,7 @@ rfid:
         pin_irq: 24
         pin_rst: 22
         mode_legacy: false
-        antenna_gain: 4
+        antenna_gain: 7
         log_all_cards: true
       same_id_delay: 1.0
       log_ignored_cards: false
