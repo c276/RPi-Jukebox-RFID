@@ -566,6 +566,14 @@ class PlayerMPD:
             self.mpd_client.play()
 
     @plugs.tag
+    def fast_forward(self, seconds: float = 1):
+        with self.mpd_lock:
+            songpos = self.current_folder_status["CURRENTSONGPOS"]
+            elapsed = self.current_folder_status["ELAPSED"]
+            print("elapsed", elapsed, type(elapsed))
+            self.mpd_client.seek(songpos, float(elapsed) + seconds)
+
+    @plugs.tag
     def play_card(self, folder: str, recursive: bool = False):
         """
         Main entry point for trigger music playing from RFID reader. Decodes second swipe options before playing folder content

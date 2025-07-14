@@ -75,6 +75,13 @@ cmd_alias_definitions = {
         'method': 'repeat',
         'note': 'Repeat',
         'ignore_card_removal_action': True},
+    'fast_forward': {
+        'package': 'player',
+        'plugin': 'ctrl',
+        'method': 'fast_forward',
+        'note': 'FastForward',
+        'ignore_card_removal_action': True,
+    },
     'flush_coverart_cache': {
         'package': 'player',
         'plugin': 'ctrl',
