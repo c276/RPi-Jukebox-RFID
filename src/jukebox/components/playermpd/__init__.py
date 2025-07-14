@@ -549,14 +549,15 @@ class PlayerMPD:
         if self.second_swipe_action is not None and is_second_swipe:
             logger.debug('Calling second swipe action for play_single')
             self.second_swipe_action()
-        else:
-            logger.debug('Calling first swipe action for play_single')
-            with self.mpd_lock:
-                self.mpd_client.clear()
-                self.mpd_client.addid(song_url)
-                self.mpd_client.play()
-            # Update the last played song in the status
-            self.music_player_status['player_status']['CURRENTFILENAME'] = song_url
+            return
+        
+        logger.debug('Calling first swipe action for play_single')
+        with self.mpd_lock:
+            self.mpd_client.clear()
+            self.mpd_client.addid(song_url)
+            self.mpd_client.play()
+        # Update the last played song in the status
+        self.music_player_status['player_status']['CURRENTFILENAME'] = song_url
 
     @plugs.tag
     def resume(self):
@@ -674,7 +675,14 @@ class PlayerMPD:
         """
         # TODO: This changes the current state -> Need to save last state
         with self.mpd_lock:
-            logger.info(f"Play folder: '{folder}'")
+            logger.info(f"Play folder: '{folder}', current song: '{self.music_player_status['player_status'].get('CURRENTFILENAME')}'")
+            is_second_swipe = self.music_player_status['player_status'].get('last_played_folder') == folder
+            if self.second_swipe_action is not None and is_second_swipe:
+                logger.debug('Calling second swipe action for play_folder')
+                self.second_swipe_action()
+                return
+            
+            logger.debug('Calling first swipe action for play_folder')
             self.mpd_client.clear()
 
             plc = playlistgenerator.PlaylistCollector(components.player.get_music_library_path())
