@@ -96,6 +96,7 @@ import jukebox.multitimer as multitimer
 import jukebox.publishing as publishing
 import jukebox.playlistgenerator as playlistgenerator
 import misc
+import simpleaudio
 
 from jukebox.NvManager import nv_manager
 from .playcontentcallback import PlayContentCallbacks, PlayCardState
@@ -567,11 +568,24 @@ class PlayerMPD:
 
     @plugs.tag
     def fast_forward(self, seconds: float = 1):
+        """ Fast forward the current song by a given number of seconds. Rewind if seconds is negative."""
         with self.mpd_lock:
             songpos = self.current_folder_status["CURRENTSONGPOS"]
             elapsed = self.current_folder_status["ELAPSED"]
-            print("elapsed", elapsed, type(elapsed))
-            self.mpd_client.seek(songpos, float(elapsed) + seconds)
+            new_elapsed = float(elapsed) + seconds
+            self.mpd_client.seek(songpos, new_elapsed if new_elapsed > 0 else 0)
+
+    @plugs.tag
+    def play_hold_jingle(self, jingle_path: str):
+        """
+        Play a jingle while the card is held on the reader.
+        This is used to indicate that the system is waiting for a second swipe or action.
+        """
+        logger.debug('Playing jingle:', jingle_path)
+        with self.mpd_lock:
+            self.mpd_client.stop()
+            wave_obj = simpleaudio.WaveObject.from_wave_file(jingle_path)
+            wave_obj.play()
 
     @plugs.tag
     def play_card(self, folder: str, recursive: bool = False):

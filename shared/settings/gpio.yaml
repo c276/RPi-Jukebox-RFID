@@ -53,7 +53,10 @@ input_devices:
         alias: next_song
       on_long_press:
         alias: fast_forward
-        args: 1.0
+        args: 4.0
+      hold_action:
+        alias: play_hold_jingle
+        args: "/home/pi/RPi-Jukebox-RFID/resources/audio/fast_forward_jingle.wav"
   PreviousSongOrRewind:
     type: CountingLongPressButton
     kwargs:
@@ -65,6 +68,10 @@ input_devices:
         alias: prev_song
       on_long_press:
         alias: fast_forward
+        args: -4.0
+      hold_action:
+        alias: play_hold_jingle
+        args: "/home/pi/RPi-Jukebox-RFID/resources/audio/rewind_jingle.wav"
   # TogglePlayback:
   #   # A button to toggle music playback on single press
   #   type: Button

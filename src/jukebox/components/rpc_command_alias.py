@@ -82,6 +82,13 @@ cmd_alias_definitions = {
         'note': 'FastForward',
         'ignore_card_removal_action': True,
     },
+    'play_hold_jingle': {
+        'package': 'player',
+        'plugin': 'ctrl',
+        'method': 'play_hold_jingle',
+        'note': 'PlayHoldJingle',
+        'ignore_card_removal_action': True,
+    },
     'flush_coverart_cache': {
         'package': 'player',
         'plugin': 'ctrl',
