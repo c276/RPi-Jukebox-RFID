@@ -113,7 +113,7 @@ rfid:
   reader_config: ../../shared/settings/rfid.yaml
   card_database: ../../shared/settings/cards.yaml
 gpioz:
-  enable: false
+  enable: true
   config_file: ../../shared/settings/gpio.yaml
 timers:
   idle_shutdown:
