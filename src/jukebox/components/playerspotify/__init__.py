@@ -2,17 +2,23 @@
 spotify_controller.py
 
 Spotify controller adapted for RPi-Jukebox-RFID integration.
-Provides class-based interface for Spotify control (similar to playermpd).
+Provides class-based interface for Spotify control.
 """
 
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import os
 import logging
+import simpleaudio
+import functools
 
 import jukebox.plugs as plugs
+import jukebox.cfghandler
+import jukebox.utils as utils
+from jukebox.NvManager import nv_manager
 
 logger = logging.getLogger(__name__)
+cfg = jukebox.cfghandler.get_handler('jukebox')
 
 CLIENT_ID_PATH = os.path.expanduser('~/.config/spotifyd/CLIENT_ID')
 CLIENT_SECRET_PATH = os.path.expanduser('~/.config/spotifyd/CLIENT_SECRET')
@@ -40,6 +46,9 @@ def read_secret(file_path):
 
 
 class PlayerSpotify:
+
+    current_uri = None
+
     def __init__(self):
         self.sp_oauth = SpotifyOAuth(
             client_id=read_secret(CLIENT_ID_PATH),
@@ -52,6 +61,46 @@ class PlayerSpotify:
         )
         self.sp = self.authenticate()
         self.device_id = self.get_device_id()
+
+        self.nvm = nv_manager()
+        self.mpd_host = cfg.getn('playerspotify', 'host')
+        self.music_player_status = self.nvm.load(cfg.getn('playerspotify', 'status_file'))
+        self.second_swipe_action_dict = {'toggle': self.toggle,
+                                         'play': self.play,
+                                         'skip': self.next,
+                                         'rewind': self.rewind,
+                                         'replay': self.replay,
+                                         'replay_if_stopped': self.replay_if_stopped}
+        self.second_swipe_action = None
+        self.decode_2nd_swipe_option()
+
+        self.end_of_playlist_next_action = utils.get_config_action(cfg,
+                                                                   'playerspotify',
+                                                                   'end_of_playlist_next_action',
+                                                                   'none',
+                                                                   {'rewind': self.rewind,
+                                                                    'stop': self.stop,
+                                                                    'none': lambda: None},
+                                                                   logger)
+        self.stopped_prev_action = utils.get_config_action(cfg,
+                                                           'playerspotify',
+                                                           'stopped_prev_action',
+                                                           'prev',
+                                                           {'rewind': self.rewind,
+                                                            'prev': self.prev,
+                                                            'none': lambda: None},
+                                                           logger)
+        self.stopped_next_action = utils.get_config_action(cfg,
+                                                          'playerspotify',
+                                                          'stopped_next_action',
+                                                          'next',
+                                                          {'rewind': self.rewind,
+                                                           'next': self.next,
+                                                           'none': lambda: None},
+                                                          logger)
+
+    def exit(self):
+        self.sp.pause_playback(device_id=self.get_device_id())
 
     def authenticate(self):
         token_info = self.sp_oauth.get_cached_token()
@@ -79,8 +128,25 @@ class PlayerSpotify:
         logger.warning(f"Device '{DEVICE_NAME}' not found.")
         return None
 
+    def decode_2nd_swipe_option(self):
+        cfg_2nd_swipe_action = cfg.setndefault('playerspotify', 'second_swipe_action', 'alias', value='none').lower()
+        if cfg_2nd_swipe_action not in [*self.second_swipe_action_dict.keys(), 'none', 'custom']:
+            logger.error(f"Config spotify.second_swipe_action must be one of "
+                         f"{[*self.second_swipe_action_dict.keys(), 'none', 'custom']}. Ignore setting.")
+        if cfg_2nd_swipe_action in self.second_swipe_action_dict.keys():
+            self.second_swipe_action = self.second_swipe_action_dict[cfg_2nd_swipe_action]
+        if cfg_2nd_swipe_action == 'custom':
+            custom_action = utils.decode_rpc_call(cfg.getn('playerspotify', 'second_swipe_action', default=None))
+            self.second_swipe_action = functools.partial(plugs.call_ignore_errors,
+                                                         custom_action['package'],
+                                                         custom_action['plugin'],
+                                                         custom_action['method'],
+                                                         custom_action['args'],
+                                                         custom_action['kwargs'])
+
     def play_uri(self, uri):
         self.refresh()
+        self.current_uri = uri
         if uri.startswith('spotify:playlist:'):
             self.sp.start_playback(device_id=self.device_id, context_uri=uri)
         elif uri.startswith('spotify:track:'):
@@ -140,6 +206,7 @@ class PlayerSpotify:
         playlists = self.sp.current_user_playlists()
         return [(p['name'], p['uri']) for p in playlists['items']]
 
+    # interface for jukebox.plugs
     @plugs.tag
     def get_player_type_and_version(self):
         raise NotImplementedError
@@ -154,26 +221,26 @@ class PlayerSpotify:
 
     @plugs.tag
     def play(self, uri=None):
-        if uri:
-            self.play_uri(uri)
+        self.playback_control("play")
+
+    @plugs.tag
+    def stop(self):
+        self.playback_control("stop")
+
+    @plugs.tag
+    def pause(self, state: int = 1):
+        if state == 1:
+            self.playback_control("pause")
         else:
             self.play()
 
     @plugs.tag
-    def stop(self):
-        raise NotImplementedError
-
-    @plugs.tag
-    def pause(self, state: int = 1):
-        raise NotImplementedError
-
-    @plugs.tag
     def prev(self):
-        raise NotImplementedError
+        self.playback_control("previous")
 
     @plugs.tag
     def next(self):
-        raise NotImplementedError
+        self.playback_control("next")
 
     @plugs.tag
     def seek(self, new_time):
@@ -187,19 +254,21 @@ class PlayerSpotify:
 
     @plugs.tag
     def rewind(self):
+        """Re-start current playlist from first track."""
         raise NotImplementedError
 
     @plugs.tag
     def replay(self):
+        """Re-start playing the last-played folder."""
         raise NotImplementedError
 
     @plugs.tag
     def toggle(self):
-        raise NotImplementedError
+        self.playback_control("toggle")
 
     @plugs.tag
     def replay_if_stopped(self):
-        raise NotImplementedError
+        self.play()
 
     @plugs.tag
     def shuffle(self, option='toggle'):
@@ -220,7 +289,7 @@ class PlayerSpotify:
 
     @plugs.tag
     def get_current_song(self, param):
-        raise NotImplementedError
+        return self.current_track()
 
     @plugs.tag
     def map_filename_to_playlist_pos(self, filename):
@@ -236,19 +305,38 @@ class PlayerSpotify:
 
     @plugs.tag
     def play_single(self, song_url):
-        raise NotImplementedError
+        is_second_swipe = self.current_uri == song_url
+        if is_second_swipe and self.second_swipe_action:
+            logger.debug("Second swipe detected, resuming playback.")
+            self.second_swipe_action()
+            return
+        self.play_uri(song_url)
 
     @plugs.tag
     def resume(self):
-        raise NotImplementedError
+        self.play()
 
     @plugs.tag
     def fast_forward(self, seconds: float = 1):
-        raise NotImplementedError
+        """ Fast forward the current song by a given number of seconds. Rewind if seconds is negative."""
+        playback = self.sp.current_playback()
+        if playback and playback["is_playing"]:
+            current_position = playback["progress_ms"]
+            track_duration = playback["item"]["duration_ms"]
+            jump_to = min(current_position + seconds*1000, track_duration - 1000)  # avoid overshooting
+            self.sp.seek_track(position_ms=jump_to)
 
     @plugs.tag
     def play_hold_jingle(self, jingle_path: str):
-        raise NotImplementedError
+        """
+        Play a jingle while the card is held on the reader.
+        This is used to indicate that the system is waiting for a second swipe or action.
+        """
+        logger.debug('Playing jingle:', jingle_path)
+        self.stop()
+        wave_obj = simpleaudio.WaveObject.from_wave_file(jingle_path)
+        wave_obj.play()
+
 
     @plugs.tag
     def play_card(self, folder: str, recursive: bool = False):

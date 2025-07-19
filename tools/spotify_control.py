@@ -18,7 +18,7 @@ SCOPE = (
 )
 DEVICE_NAME = "spotifyd-pi"  # Change this to your spotifyd device name
 
-def get_client_id(file_path='~/.config/spotifyd/CLIENT_ID'):
+def get_client_id(file_path='/home/pi/.config/spotifyd/CLIENT_ID'):
     try:
         with open(file_path, 'r') as file:
             return file.read().strip()
@@ -26,7 +26,7 @@ def get_client_id(file_path='~/.config/spotifyd/CLIENT_ID'):
         print(f"Client ID file '{file_path}' not found.")
         return None
 
-def get_client_secret(file_path='~/.config/spotifyd/CLIENT_SECRET'):
+def get_client_secret(file_path='/home/pi/.config/spotifyd/CLIENT_SECRET'):
     try:
         with open(file_path, 'r') as file:
             return file.read().strip()

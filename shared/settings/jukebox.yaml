@@ -101,6 +101,25 @@ playermpd:
   repeat_action:
   # Must be one of: 'on', 'off'
     alias: on
+playerspotify:
+  # Config of the Spotify Player
+  second_swipe_action:
+    # Note: Does not follow the RPC alias convention (yet)
+    # Must be one of: 'toggle', 'play', 'skip', 'rewind', 'replay', 'none'
+    alias: play
+  repeat_mode:
+    # Note: Defines whether repeat mode is set
+    # Must be one of: 'toggle', 'toggle_repeat' ,'toggle_repeat_single', 'enable_repeat', 'enable_repeat_single', 'disable'
+    alias: enable_repeat
+  # Must be one of: 'none', 'stop', 'rewind':
+  end_of_playlist_next_action: none
+  # Must be one of: 'none', 'prev', 'rewind':
+  stopped_prev_action: prev
+  # Must be one of: 'none', 'next', 'rewind':
+  stopped_next_action: next
+  repeat_action:
+  # Must be one of: 'on', 'off'
+    alias: on
 rpc:
   tcp_port: 5555
   websocket_port: 5556
