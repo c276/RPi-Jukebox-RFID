@@ -92,10 +92,9 @@ class ReaderClass(ReaderBaseClass):
         logger_pirc522 = logging.getLogger("pirc522")
         if not logger_pirc522.handlers:
             handler = logging.StreamHandler()
-            handler.setLevel(logging.DEBUG)
-            separator='\t\t\t\t\t\t\t'
+            handler.setLevel(logging.ERROR)
             formatter = logging.Formatter(
-                fmt=f'%(asctime)s -  %(lineno)d:%(filename)s{separator}- %(levelname)s - %(message)s',
+                fmt='%(asctime)s -  %(lineno)d:%(pathname)s - %(levelname)s - %(message)s',
                 datefmt='%d.%m.%Y %H:%M:%S'
             )
             handler.setFormatter(formatter)
