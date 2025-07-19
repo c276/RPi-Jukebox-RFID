@@ -822,6 +822,7 @@ player_ctrl: PlayerMPD
 #: See :class:`PlayContentCallbacks`
 play_card_callbacks: PlayContentCallbacks[PlayCardState]
 
+# TODO: re-enable this. figure out how to do this!
 
 # @plugs.initialize
 # def initialize():
