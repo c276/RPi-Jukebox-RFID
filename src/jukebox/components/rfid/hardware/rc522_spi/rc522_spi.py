@@ -87,6 +87,19 @@ class ReaderClass(ReaderBaseClass):
                                    pin_irq=pin_irq,
                                    antenna_gain=antenna_gain,
                                    pin_mode='BCM')
+        # set logger config of pirc522
+        # TODO: why do we throw warning 'Error E1' anyways? Why do we need to write to a card and what goes wrong there?
+        logger_pirc522 = logging.getLogger("pirc522")
+        if not logger_pirc522.handlers:
+            handler = logging.StreamHandler()
+            handler.setLevel(logging.DEBUG)
+            separator='\t\t\t\t\t\t\t'
+            formatter = logging.Formatter(
+                fmt=f'%(asctime)s -  %(lineno)d:%(filename)s{separator}- %(levelname)s - %(message)s',
+                datefmt='%d.%m.%Y %H:%M:%S'
+            )
+            handler.setFormatter(formatter)
+            logger_pirc522.addHandler(handler)
 
     def cleanup(self):
         self.device.cleanup()
