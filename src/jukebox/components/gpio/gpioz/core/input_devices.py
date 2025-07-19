@@ -442,19 +442,16 @@ class CountingLongPressButton(ShortLongPressButton):
 
     @property
     def hold_action(self):
-        print("hold_action", self._hold_action_callback)
         return self._hold_action_callback
 
     @hold_action.setter
     def hold_action(self, func: Callable):
         self._hold_action_callback = func
-        print("hold_action setter", self._hold_action_callback)
 
     def set_rpc_actions(self, action_config):
         self.on_short_press = self._decode_rpc_action('on_short_press', action_config)
         self.on_long_press = self._decode_rpc_action('on_long_press', action_config)
         self.hold_action = self._decode_rpc_action('hold_action', action_config)
-        print("set_rpc_actions",self._decode_rpc_action('hold_action', action_config))
 
 
 class RotaryEncoder(NameMixin):
