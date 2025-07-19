@@ -43,6 +43,16 @@ class PlayerHybrid:
     def decode_2nd_swipe_option(self):
         self.current_player.decode_2nd_swipe_option()
 
+    def set_current_player(self, player):
+        """
+        Set the current player based on the player type.
+        :param player: PlayerMPD or PlayerSpotify
+        """
+        if self.current_player != player:
+            logger.debug("Switching player")
+            self.current_player.reset_current_playback()
+            self.current_player = player
+
     @plugs.tag
     def get_player_type_and_version(self):
         return self.current_player.get_player_type_and_version()
@@ -121,11 +131,11 @@ class PlayerHybrid:
 
     @plugs.tag
     def play_single(self, song_url):
-        print(f"Playing single song: {song_url}")
+        logger.debug(f"Playing single song: {song_url}")
         if song_url.startswith('spotify:'):
-            self.current_player = self._player_spotify
+            self.set_current_player(self._player_spotify)
         else:
-            self.current_player = self._player_mpd
+            self.set_current_player(self._player_mpd)
         self.current_player.play_single(song_url)
         
 
@@ -150,6 +160,11 @@ class PlayerHybrid:
 
     @plugs.tag
     def play_card(self, folder: str, recursive: bool = False):
+        logger.debug(f"Playing folder: {folder}")
+        if folder.startswith('spotify:'):
+            self.set_current_player(self._player_spotify)
+        else:
+            self.set_current_player(self._player_mpd)
         self.current_player.play_card(folder, recursive)
 
     @plugs.tag
@@ -170,10 +185,20 @@ class PlayerHybrid:
 
     @plugs.tag
     def play_folder(self, folder: str, recursive: bool = False) -> None:
+        logger.debug(f"Playing folder: {folder}")
+        if folder.startswith('spotify:'):
+            self.set_current_player(self._player_spotify)
+        else:
+            self.set_current_player(self._player_mpd)
         self.current_player.play_folder(folder, recursive)
 
     @plugs.tag
     def play_album(self, albumartist: str, album: str):
+        logger.debug(f"Playing album: {album}")
+        if album.startswith('spotify:'):
+            self.set_current_player(self._player_spotify)
+        else:
+            self.set_current_player(self._player_mpd)
         self.current_player.play_album(albumartist, album)
 
     @plugs.tag

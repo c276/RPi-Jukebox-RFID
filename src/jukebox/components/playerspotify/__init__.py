@@ -206,6 +206,15 @@ class PlayerSpotify:
         playlists = self.sp.current_user_playlists()
         return [(p['name'], p['uri']) for p in playlists['items']]
 
+    def reset_current_playback(self):
+        """
+        Reset the current playback state, i.e. clear the current song and reset the elapsed time.
+        This is used when a new folder is played or the playback is stopped.
+        """
+        self.current_uri = None
+        self.sp.pause_playback(device_id=self.device_id)
+        # self.nvm.save(cfg.getn('playerspotify', 'status_file'), self.music_player_status)
+
     # interface for jukebox.plugs
     @plugs.tag
     def get_player_type_and_version(self):

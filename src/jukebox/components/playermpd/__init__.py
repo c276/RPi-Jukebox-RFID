@@ -809,6 +809,18 @@ class PlayerMPD:
             else:
                 return False
 
+    def reset_current_playback(self):
+        """
+        Reset the current playback state, i.e. clear the current song and reset the elapsed time.
+        This is used when a new folder is played or the playback is stopped.
+        """
+        self.current_folder_status = {}
+        self.music_player_status['player_status']['CURRENTSONGPOS'] = 0
+        self.music_player_status['player_status']['CURRENTFILENAME'] = ''
+        self.music_player_status['player_status']['ELAPSED'] = '0.0'
+        self.music_player_status['player_status']['last_played_folder'] = ''
+        self.music_player_status['player_status']['playback_state'] = 'stopped'
+
 
 # ---------------------------------------------------------------------------
 # Plugin Initializer / Finalizer
