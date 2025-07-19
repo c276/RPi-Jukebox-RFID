@@ -823,30 +823,30 @@ player_ctrl: PlayerMPD
 play_card_callbacks: PlayContentCallbacks[PlayCardState]
 
 
-@plugs.initialize
-def initialize():
-    global player_ctrl
-    player_ctrl = PlayerMPD()
-    plugs.register(player_ctrl, name='ctrl')
+# @plugs.initialize
+# def initialize():
+#     global player_ctrl
+#     player_ctrl = PlayerMPD()
+#     plugs.register(player_ctrl, name='ctrl')
 
-    global play_card_callbacks
-    play_card_callbacks = PlayContentCallbacks[PlayCardState]('play_card_callbacks', logger, context=player_ctrl.mpd_lock)
+#     global play_card_callbacks
+#     play_card_callbacks = PlayContentCallbacks[PlayCardState]('play_card_callbacks', logger, context=player_ctrl.mpd_lock)
 
-    # Update mpc library
-    library_update = cfg.setndefault('playermpd', 'library', 'update_on_startup', value=True)
-    if library_update:
-        player_ctrl.update()
+#     # Update mpc library
+#     library_update = cfg.setndefault('playermpd', 'library', 'update_on_startup', value=True)
+#     if library_update:
+#         player_ctrl.update()
 
-    # Check user rights on music library
-    library_check_user_rights = cfg.setndefault('playermpd', 'library', 'check_user_rights', value=True)
-    if library_check_user_rights is True:
-        music_library_path = components.player.get_music_library_path()
-        if music_library_path is not None:
-            logger.info(f"Change user rights for {music_library_path}")
-            misc.recursive_chmod(music_library_path, mode_files=0o666, mode_dirs=0o777)
+#     # Check user rights on music library
+#     library_check_user_rights = cfg.setndefault('playermpd', 'library', 'check_user_rights', value=True)
+#     if library_check_user_rights is True:
+#         music_library_path = components.player.get_music_library_path()
+#         if music_library_path is not None:
+#             logger.info(f"Change user rights for {music_library_path}")
+#             misc.recursive_chmod(music_library_path, mode_files=0o666, mode_dirs=0o777)
 
 
-@plugs.atexit
-def atexit(**ignored_kwargs):
-    global player_ctrl
-    return player_ctrl.exit()
+# @plugs.atexit
+# def atexit(**ignored_kwargs):
+#     global player_ctrl
+#     return player_ctrl.exit()

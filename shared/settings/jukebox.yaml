@@ -11,7 +11,7 @@ modules:
     jingle: jingle
     jingle.alsawave: jingle.alsawave
     jingle.jinglemp3: jingle.jinglemp3
-    player: playermpd
+    player: playerhybrid
     cards: rfid.cards
     rfid: rfid.reader
     timers: timers
@@ -171,3 +171,7 @@ webapp:
   # when handling a lot of music
   # Defaults to true
   show_covers: true
+playerhybrid:
+  library:
+    update_on_startup: true
+    check_user_rights: true
