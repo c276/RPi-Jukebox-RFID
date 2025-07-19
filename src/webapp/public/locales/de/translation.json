@@ -44,7 +44,8 @@
           "audio": "Audio & Lautstärke",
           "host": "System",
           "timers": "Timer",
-          "synchronisation": "Synchronisation"
+          "synchronisation": "Synchronisation",
+          "play_spotify": "Spotify abspielen"
         }
       },
       "actions": {
@@ -235,15 +236,15 @@
       },
       "shutdown": {
         "title": "Herunterfahren",
-        "label": "Fährt die Phoniebox nach Ablauf des Timers herunter."
+        "label": "Fährt die Jimbabox nach Ablauf des Timers herunter."
       },
       "fade-volume": {
         "title": "Lautstärke ausblenden",
-        "label": "Blendet die Lautstärke zum Ende des Timers langsam aus und fährt dann die Phoniebox herunter."
+        "label": "Blendet die Lautstärke zum Ende des Timers langsam aus und fährt dann die Jimbabox herunter."
       },
       "idle-shutdown": {
         "title": "Leerlaufabschaltung",
-        "label": "Fährt die Phoniebox herunter, nachdem sie für eine bestimmte Zeit im Leerlauf war."
+        "label": "Fährt die Jimbabox herunter, nachdem sie für eine bestimmte Zeit im Leerlauf war."
       },
       "set": "Timer erstellen",
       "cancel": "Abbrechen",

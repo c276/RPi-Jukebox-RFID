@@ -44,7 +44,8 @@
           "audio": "Audio & Volume",
           "host": "System",
           "timers": "Timers",
-          "synchronisation": "Synchronisation"
+          "synchronisation": "Synchronisation",
+          "play_spotify": "Play spotify"
         }
       },
       "actions": {
@@ -235,15 +236,15 @@
       },
       "shutdown": {
         "title": "Shut Down",
-        "label": "Forces the Phoniebox to shut down after the timer has ended."
+        "label": "Forces the Jimbabox to shut down after the timer has ended."
       },
       "fade-volume": {
         "title": "Fade volume and Shut Down",
-        "label": "Slowly fades out volume towards the end of the timer and then shuts down the Phoniebox."
+        "label": "Slowly fades out volume towards the end of the timer and then shuts down the Jimbabox."
       },
       "idle-shutdown": {
         "title": "Idle Shut Down",
-        "label": "Shuts down the Phoniebox after the Phoniebox was idle for a given time."
+        "label": "Shuts down the Jimbabox after the Jimbabox was idle for a given time."
       },
       "ended": "Done",
       "set": "Set timer",

@@ -36,6 +36,12 @@ const JUKEBOX_ACTIONS_MAP = {
     }
   },
 
+  play_spotify: {
+    commands: {
+      play_single: {},
+    }
+  },
+
   // Audio & Volume
   audio: {
     commands: {
