@@ -10,6 +10,8 @@ from spotipy.oauth2 import SpotifyOAuth
 import os
 import logging
 
+import jukebox.plugs as plugs
+
 logger = logging.getLogger(__name__)
 
 CLIENT_ID_PATH = os.path.expanduser('~/.config/spotifyd/CLIENT_ID')
@@ -89,29 +91,24 @@ class SpotifyController:
     def playback_control(self, command):
         self.refresh()
         try:
-            match command:
-                case "play": self.sp.start_playback(device_id=self.device_id)
-                case "pause" | "stop": self.sp.pause_playback(device_id=self.device_id)
-                case "next": self.sp.next_track(device_id=self.device_id)
-                case "previous": self.sp.previous_track(device_id=self.device_id)
-                case "toggle":
-                    playback = self.sp.current_playback()
-                    if playback and playback['is_playing']:
-                        self.sp.pause_playback(device_id=self.device_id)
-                    else:
-                        self.sp.start_playback(device_id=self.device_id)
-                case _: logger.warning(f"Unknown command: {command}")
+            if command == "play":
+                self.sp.start_playback(device_id=self.device_id)
+            elif command in ("pause", "stop"):
+                self.sp.pause_playback(device_id=self.device_id)
+            elif command == "next":
+                self.sp.next_track(device_id=self.device_id)
+            elif command == "previous":
+                self.sp.previous_track(device_id=self.device_id)
+            elif command == "toggle":
+                playback = self.sp.current_playback()
+                if playback and playback['is_playing']:
+                    self.sp.pause_playback(device_id=self.device_id)
+                else:
+                    self.sp.start_playback(device_id=self.device_id)
+            else:
+                logger.warning(f"Unknown command: {command}")
         except spotipy.exceptions.SpotifyException as e:
             logger.error(f"Spotify API error: {e}")
-
-    def seek(self, offset_ms):
-        self.refresh()
-        playback = self.sp.current_playback()
-        if playback:
-            current_pos = playback.get('progress_ms', 0)
-            duration = playback['item']['duration_ms']
-            new_pos = max(0, min(current_pos + offset_ms, duration - 1000))
-            self.sp.seek_track(position_ms=new_pos, device_id=self.device_id)
 
     def volume(self, change):
         self.refresh()
@@ -120,21 +117,6 @@ class SpotifyController:
             vol = playback['device']['volume_percent']
             new_vol = max(0, min(100, vol + change))
             self.sp.volume(new_vol, device_id=self.device_id)
-
-    def shuffle(self):
-        self.refresh()
-        current = self.sp.current_playback()
-        if current:
-            state = current.get('shuffle_state', False)
-            self.sp.shuffle(not state, device_id=self.device_id)
-
-    def repeat(self):
-        self.refresh()
-        current = self.sp.current_playback()
-        if current:
-            mode = current.get('repeat_state', 'off')
-            next_mode = {'off': 'context', 'context': 'track', 'track': 'off'}[mode]
-            self.sp.repeat(next_mode, device_id=self.device_id)
 
     def current_track(self):
         self.refresh()
@@ -157,3 +139,169 @@ class SpotifyController:
         self.refresh()
         playlists = self.sp.current_user_playlists()
         return [(p['name'], p['uri']) for p in playlists['items']]
+
+    @plugs.tag
+    def get_player_type_and_version(self):
+        raise NotImplementedError
+
+    @plugs.tag
+    def update(self):
+        raise NotImplementedError
+
+    @plugs.tag
+    def update_wait(self):
+        raise NotImplementedError
+
+    @plugs.tag
+    def play(self, uri=None):
+        if uri:
+            self.play_uri(uri)
+        else:
+            self.play()
+
+    @plugs.tag
+    def stop(self):
+        raise NotImplementedError
+
+    @plugs.tag
+    def pause(self, state: int = 1):
+        raise NotImplementedError
+
+    @plugs.tag
+    def prev(self):
+        raise NotImplementedError
+
+    @plugs.tag
+    def next(self):
+        raise NotImplementedError
+
+    @plugs.tag
+    def seek(self, new_time):
+        self.refresh()
+        playback = self.sp.current_playback()
+        if playback:
+            current_pos = playback.get('progress_ms', 0)
+            duration = playback['item']['duration_ms']
+            new_pos = max(0, min(current_pos + new_time, duration - 1000))
+            self.sp.seek_track(position_ms=new_pos, device_id=self.device_id)
+
+    @plugs.tag
+    def rewind(self):
+        raise NotImplementedError
+
+    @plugs.tag
+    def replay(self):
+        raise NotImplementedError
+
+    @plugs.tag
+    def toggle(self):
+        raise NotImplementedError
+
+    @plugs.tag
+    def replay_if_stopped(self):
+        raise NotImplementedError
+
+    @plugs.tag
+    def shuffle(self, option='toggle'):
+        self.refresh()
+        current = self.sp.current_playback()
+        if current:
+            state = current.get('shuffle_state', False)
+            self.sp.shuffle(not state, device_id=self.device_id)
+
+    @plugs.tag
+    def repeat(self, option='toggle'):
+        self.refresh()
+        current = self.sp.current_playback()
+        if current:
+            mode = current.get('repeat_state', 'off')
+            next_mode = {'off': 'context', 'context': 'track', 'track': 'off'}[mode]
+            self.sp.repeat(next_mode, device_id=self.device_id)
+
+    @plugs.tag
+    def get_current_song(self, param):
+        raise NotImplementedError
+
+    @plugs.tag
+    def map_filename_to_playlist_pos(self, filename):
+        raise NotImplementedError
+
+    @plugs.tag
+    def remove(self):
+        raise NotImplementedError
+
+    @plugs.tag
+    def move(self):
+        raise NotImplementedError
+
+    @plugs.tag
+    def play_single(self, song_url):
+        raise NotImplementedError
+
+    @plugs.tag
+    def resume(self):
+        raise NotImplementedError
+
+    @plugs.tag
+    def fast_forward(self, seconds: float = 1):
+        raise NotImplementedError
+
+    @plugs.tag
+    def play_hold_jingle(self, jingle_path: str):
+        raise NotImplementedError
+
+    @plugs.tag
+    def play_card(self, folder: str, recursive: bool = False):
+        raise NotImplementedError
+
+    @plugs.tag
+    def get_single_coverart(self, song_url):
+        raise NotImplementedError
+
+    @plugs.tag
+    def get_album_coverart(self, albumartist: str, album: str):
+        raise NotImplementedError
+
+    @plugs.tag
+    def flush_coverart_cache(self):
+        raise NotImplementedError
+
+    @plugs.tag
+    def get_folder_content(self, folder: str):
+        raise NotImplementedError
+
+    @plugs.tag
+    def play_folder(self, folder: str, recursive: bool = False) -> None:
+        raise NotImplementedError
+
+    @plugs.tag
+    def play_album(self, albumartist: str, album: str):
+        raise NotImplementedError
+
+    @plugs.tag
+    def queue_load(self, folder):
+        raise NotImplementedError
+
+    @plugs.tag
+    def playerstatus(self):
+        raise NotImplementedError
+
+    @plugs.tag
+    def playlistinfo(self):
+        raise NotImplementedError
+
+    @plugs.tag
+    def list_all_dirs(self):
+        raise NotImplementedError
+
+    @plugs.tag
+    def list_albums(self):
+        raise NotImplementedError
+
+    @plugs.tag
+    def list_songs_by_artist_and_album(self, albumartist, album):
+        raise NotImplementedError
+
+    @plugs.tag
+    def get_song_by_url(self, song_url):
+        raise NotImplementedError

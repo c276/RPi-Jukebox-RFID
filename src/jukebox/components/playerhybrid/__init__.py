@@ -12,7 +12,7 @@ import misc
 from .playcontentcallback import PlayContentCallbacks, PlayCardState
 
 from components.playermpd import PlayerMPD
-# from jukebox.components.playerspotify import SpotifyController
+# from components.playerspotify import PlayerSpotify
 
 logger = logging.getLogger('jb.PlayerMPD')
 cfg = jukebox.cfghandler.get_handler('jukebox')
@@ -22,11 +22,11 @@ class PlayerHybrid:
 
     
     player_mpd = PlayerMPD()
-    # player_spotify = SpotifyController()
+    # player_spotify = PlayerSpotify()
 
     def __init__(self):
         self.player_mpd.__init__()
-        # self.player_spotify.init()
+        # self.player_spotify.__init__()
 
     def exit(self):
         logger.debug("Exit routine of players started")
