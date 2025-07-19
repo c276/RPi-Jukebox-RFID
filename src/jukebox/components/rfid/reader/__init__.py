@@ -228,6 +228,7 @@ class ReaderRunner(threading.Thread):
                     previous_time = time.time()
                 else:
                     # Time-out for reader internal error resulting in empty string: to be ignored
+                    self._logger.debug("No card detected, waiting for next card ...")
                     pass
                 # Slow down the card reading while loop in case card is placed permanently on reader
                 self._cancel.wait(timeout=0.2)
