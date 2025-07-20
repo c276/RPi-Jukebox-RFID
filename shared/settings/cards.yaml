@@ -2,8 +2,8 @@
   alias: play_folder
   args:
   - Sing-mit-mir-Kinderlieder-2
-# Der Regenbogenfisch
+# Die Vogelhochzeit
 '3810619155':
   alias: play_spotify
   args:
-  - spotify:playlist:5vvdAx1u0rK43v1M3BzzJZ
+  - spotify:playlist:6kGrcf0CtV6NYNoIFZkGFo

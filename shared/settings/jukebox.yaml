@@ -103,6 +103,7 @@ playermpd:
     alias: on
 playerspotify:
   # Config of the Spotify Player
+  status_file: ../../shared/settings/spotify_player_status.json
   second_swipe_action:
     # Note: Does not follow the RPC alias convention (yet)
     # Must be one of: 'toggle', 'play', 'skip', 'rewind', 'replay', 'none'
