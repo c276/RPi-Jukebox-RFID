@@ -1,30 +1,32 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { TextField } from '@mui/material';
 
 import { getActionAndCommand, getArgsValues } from '../../../utils';
 
 const SelectPlaySpotify = ({
   actionData,
-  registerMusicToCard,
-  // handleActionDataChange,
-  // cardId,
+  handleActionDataChange,
 }) => {
   const { t } = useTranslation();
   const { command } = getActionAndCommand(actionData);
-  const [inputValue, setInputValue] = useState('');
+  const values = getArgsValues(actionData);
+
+  const song_url = values[0] || '';
 
   const handleChange = (event) => {
-    const value = event.target.value;
-    // setInputValue(value);
-    registerMusicToCard('play_single', { song_url: value });
-  }
+    const newUrl = event.target.value;
+    handleActionDataChange('play_spotify', 'play_single', { song_url: newUrl });
+  };
 
   return (
-    <input
-      type="text"
-      placeholder="Enter spotify uri"
-      value={inputValue}
+    <TextField
+      fullWidth
+      label={t('cards.controls.actions.play-spotify.input-label') || 'Spotify URI'}
+      variant="outlined"
+      value={song_url}
       onChange={handleChange}
+      placeholder="spotify:track:xxx"
     />
   );
 };
