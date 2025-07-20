@@ -7,10 +7,12 @@ Provides class-based interface for Spotify control.
 
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+from dataclasses import dataclass, asdict
 import os
 import logging
 import simpleaudio
 import functools
+from typing import Optional
 
 import jukebox.plugs as plugs
 import jukebox.cfghandler
@@ -44,6 +46,21 @@ def read_secret(file_path):
         logger.error(f"Error reading secret from {file_path}: {e}")
         return None
 
+@dataclass
+class PlayerSpotifyStatus:
+    status: str
+    track: Optional[str]
+    artist: Optional[str]
+    device: Optional[str]
+    is_playing: bool
+    volume: Optional[int]
+    progress_sec: int
+    duration_sec: int
+    shuffle: Optional[str]
+    repeat: Optional[str]
+
+    def dict(self):
+        return {k: str(v) for k, v in asdict(self).items()}
 
 class PlayerSpotify:
 
@@ -98,6 +115,7 @@ class PlayerSpotify:
                                                            'next': self.next,
                                                            'none': lambda: None},
                                                           logger)
+        self._player_status = None
 
     def exit(self):
         self.sp.pause_playback(device_id=self.get_device_id())
@@ -379,9 +397,44 @@ class PlayerSpotify:
     def queue_load(self, folder):
         raise NotImplementedError
 
+    def _update_player_status(self):
+        playback = self.sp.current_playback()
+        if not playback or not playback.get('item'):
+            artist = None
+            is_playing = False
+            device = None
+            volume = None
+            progress = 0
+            duration = 0
+            shuffle = None
+            repeat = None
+        else:
+            item = playback['item']
+            artist = ", ".join([a['name'] for a in item['artists']])
+            track = item['name']
+            is_playing = playback['is_playing']
+            device = playback['device']['name']
+            volume = playback['device']['volume_percent']
+            progress = playback['progress_ms'] // 1000
+            duration = item['duration_ms'] // 1000
+            shuffle = playback['shuffle_state']
+            repeat = playback['repeat_state']
+
+        self._player_status = PlayerSpotifyStatus(status="playing" if is_playing else "paused",
+                                                 track=track,
+                                                 artist=artist,
+                                                 device=device,
+                                                 is_playing=is_playing,
+                                                 volume=volume,
+                                                 progress_sec=progress,
+                                                 duration_sec=duration,
+                                                 shuffle=shuffle,
+                                                 repeat=repeat)
+        self.music_player_status = self._player_status.dict()
+
     @plugs.tag
     def playerstatus(self):
-        raise NotImplementedError
+        return self.music_player_status
 
     @plugs.tag
     def playlistinfo(self):
