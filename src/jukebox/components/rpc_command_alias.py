@@ -30,6 +30,12 @@ cmd_alias_definitions = {
         'package': 'player',
         'plugin': 'ctrl',
         'method': 'play_single'},
+    'play_spotify': {
+        'title': 'Play a single spotify song triggered by card swipe',
+        'note': "This function plays the content of a given spotify URI",
+        'package': 'player',
+        'plugin': 'ctrl',
+        'method': 'play_single'},
     'play_folder': {
         'title': 'Play a folder URL triggered by card swipe',
         'note': "This function plays the content of a given folder URL",

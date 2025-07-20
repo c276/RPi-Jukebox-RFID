@@ -15,7 +15,7 @@ const SelectPlaySpotify = ({
 
   const handleChange = (event) => {
     const newUrl = event.target.value;
-    handleActionDataChange('play_spotify', 'play_single', { song_url: newUrl });
+    handleActionDataChange('play_spotify', 'play_spotify', { song_url: newUrl });
   };
 
   return (

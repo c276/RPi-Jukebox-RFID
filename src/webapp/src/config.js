@@ -39,7 +39,7 @@ const JUKEBOX_ACTIONS_MAP = {
   // Spotify
   play_spotify: {
     commands: {
-      play_single: {},
+      play_spotify: {},
     },
   },
 
