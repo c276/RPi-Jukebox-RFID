@@ -9,7 +9,6 @@ const SelectPlaySpotify = ({
   handleActionDataChange,
 }) => {
   const { t } = useTranslation();
-  const { command } = getActionAndCommand(actionData);
   const values = getArgsValues(actionData);
 
   const song_url = values[0] || '';
