@@ -22,7 +22,7 @@ const SelectPlaySpotify = ({
   return (
     <TextField
       fullWidth
-      label={t('cards.controls.actions.play-spotify.input-label') || 'Spotify URI'}
+      label="Spotify URI"
       variant="outlined"
       value={song_url}
       onChange={handleChange}

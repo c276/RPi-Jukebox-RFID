@@ -14,7 +14,6 @@ import { buildActionData } from '../utils';
 import SelectHost from './actions/host';
 import SelectSynchronisation from './actions/synchronisation';
 import SelectSpotify from './actions/play-spotify';
-import registerMusicToCard from '../../Library/lists';
 
 const ControlsSelector = ({
   actionData,
@@ -73,7 +72,7 @@ const ControlsSelector = ({
         {actionData.action === 'play_spotify' &&
           <SelectSpotify
             actionData={actionData}
-            registerMusicToCard={registerMusicToCard}
+            handleActionDataChange={handleActionDataChange}
           />
         }
 

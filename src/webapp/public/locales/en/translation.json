@@ -45,7 +45,7 @@
           "host": "System",
           "timers": "Timers",
           "synchronisation": "Synchronisation",
-          "play_spotify": "Play spotify"
+          "play_spotify": "Play Spotify"
         }
       },
       "actions": {
