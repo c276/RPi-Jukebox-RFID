@@ -109,18 +109,23 @@ class IdleShutdownTimer:
 
 
 class IdleCheck:
-    def __init__(self) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         self.last_player_status = plugin.call('player', 'ctrl', 'playerstatus')
+        self.timer_started = False
         logger.debug('Started IdleCheck with initial state: {}'.format(self.last_player_status))
 
     # Run function
-    def __call__(self):
+    def __call__(self, *args, **kwargs):
         player_status = plugin.call('player', 'ctrl', 'playerstatus')
 
-        if self.last_player_status == player_status:
+        if self.last_player_status == player_status and not self.timer_started:
+            print("Player status unchanged, starting idle shutdown timer")
             plugin.call_ignore_errors('timers', 'private_timer_idle_shutdown', 'start')
-        else:
+            self.timer_started = True
+        elif self.timer_started and self.last_player_status != player_status:
+            print("Player status changed, canceling idle shutdown timer")
             plugin.call_ignore_errors('timers', 'private_timer_idle_shutdown', 'cancel')
+            self.timer_started = False
 
         self.last_player_status = player_status.copy()
         return self.last_player_status
@@ -130,10 +135,10 @@ class IdleShutdown():
     files_num_entries: int = 0
     files_latest_mtime: float = 0
 
-    def __init__(self) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         self.base_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', '..')
 
-    def __call__(self):
+    def __call__(self, *args, **kwargs):
         logger.debug('Last checks before shutting down')
         if self._has_active_ssh_sessions():
             logger.debug('Active SSH sessions found, will not shutdown now')
