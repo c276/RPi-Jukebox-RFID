@@ -1,4 +1,9 @@
+'1196182664450704':
+  alias: play_folder
+  args:
+  - Sing-mit-mir-Kinderlieder-2
+# Der Regenbogenfisch
 '3810619155':
   alias: play_single
   args:
-  - Sing-mit-mir-Kinderlieder-2/26 - Die Affen rasen durch den Wald.mp3
+  - spotify:playlist:5vvdAx1u0rK43v1M3BzzJZ
