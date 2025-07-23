@@ -153,8 +153,8 @@ class PlayerHybrid:
         Play a jingle while the card is held on the reader.
         This is used to indicate that the system is waiting for a second swipe or action.
         """
-        logger.debug('Playing jingle:', jingle_path)
-        self.current_player.stop()
+        # logger.debug('Playing jingle:', jingle_path)
+        self.current_player.pause()
         wave_obj = simpleaudio.WaveObject.from_wave_file(jingle_path)
         wave_obj.play()
 

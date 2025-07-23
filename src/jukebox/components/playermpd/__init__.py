@@ -575,6 +575,7 @@ class PlayerMPD:
             elapsed = self.current_folder_status["ELAPSED"]
             new_elapsed = float(elapsed) + seconds
             self.mpd_client.seek(songpos, new_elapsed if new_elapsed > 0 else 0)
+            self.play()
 
     @plugs.tag
     def play_hold_jingle(self, jingle_path: str):

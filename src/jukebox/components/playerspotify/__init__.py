@@ -12,6 +12,7 @@ import os
 import logging
 import simpleaudio
 import functools
+import time
 from typing import Optional
 
 import jukebox.plugs as plugs
@@ -270,14 +271,23 @@ class PlayerSpotify:
         self.playback_control("next")
 
     @plugs.tag
-    def seek(self, new_time):
+    def seek(self, seconds: int):
         self.refresh()
+        logger.debug(f"Fast forwarding {seconds} seconds.")
         playback = self.sp.current_playback()
-        if playback:
-            current_pos = playback.get('progress_ms', 0)
-            duration = playback['item']['duration_ms']
-            new_pos = max(0, min(current_pos + new_time, duration - 1000))
-            self.sp.seek_track(position_ms=new_pos, device_id=self.device_id)
+        if playback and playback["item"] and playback["progress_ms"]:
+            current_position = playback["progress_ms"]
+            track_duration = playback["item"]["duration_ms"]
+            jump_to = max(0, min(current_position + seconds*1000, track_duration - 1000))
+
+            self.sp.seek_track(position_ms=int(jump_to), device_id=self.device_id)
+            time.sleep(0.5)  # allow API to update position
+
+            playback = self.sp.current_playback()
+
+            self.play()  # resume if needed
+        else:
+            print("Cannot seek: No track currently playing.")
 
     @plugs.tag
     def rewind(self):
@@ -346,12 +356,7 @@ class PlayerSpotify:
     @plugs.tag
     def fast_forward(self, seconds: float = 1):
         """ Fast forward the current song by a given number of seconds. Rewind if seconds is negative."""
-        playback = self.sp.current_playback()
-        if playback and playback["is_playing"]:
-            current_position = playback["progress_ms"]
-            track_duration = playback["item"]["duration_ms"]
-            jump_to = min(current_position + seconds*1000, track_duration - 1000)  # avoid overshooting
-            self.sp.seek_track(position_ms=jump_to)
+        self.seek(int(seconds))
 
     @plugs.tag
     def play_hold_jingle(self, jingle_path: str):
