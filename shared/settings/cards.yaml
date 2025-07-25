@@ -7,3 +7,7 @@
   alias: play_spotify
   args:
   - spotify:playlist:6kGrcf0CtV6NYNoIFZkGFo
+'1241266936156816':
+  alias: play_single
+  args:
+  - Sing-mit-mir-Kinderlieder-2/26 - Die Affen rasen durch den Wald.mp3
