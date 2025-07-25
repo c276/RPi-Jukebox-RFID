@@ -558,6 +558,7 @@ class PlayerMPD:
             self.mpd_client.play()
         # Update the last played song in the status
         self.music_player_status['player_status']['CURRENTFILENAME'] = song_url
+        self.music_player_status['player_status']['last_played_folder'] = ''
 
     @plugs.tag
     def resume(self):
