@@ -108,6 +108,9 @@ class ReaderRunner(threading.Thread):
         # Get additional configuration
         self._cfg_same_id_delay = cfg_rfid.setndefault('rfid', 'readers', reader_cfg_key,
                                                        'same_id_delay', value=1.0)
+        # allow false-positive no-card-detection for x iterations before sending "no card detected"
+        self._cfg_allow_no_card_id_for_iterations = cfg_rfid.setndefault('rfid', 'readers', reader_cfg_key,
+                                                       'allow_no_card_id_for_iterations', value=0)
         self._cfg_place_not_swipe = cfg_rfid.setndefault('rfid', 'readers', reader_cfg_key,
                                                          'place_not_swipe', 'enabled', value=False)
         self._cfg_log_ignored_cards = cfg_rfid.setndefault('rfid', 'readers', reader_cfg_key,
@@ -134,6 +137,8 @@ class ReaderRunner(threading.Thread):
         # Ready to go
         self._cancel = threading.Event()
 
+        self._no_card_id_counter = 0
+
     def stop(self):
         self._cancel.set()
         self._reader.stop()
@@ -153,6 +158,7 @@ class ReaderRunner(threading.Thread):
         # We need to store if the last action was a valid action, which triggers the timer for the remove action
         # So we can decide when a card id comes in, if the timer has to be reset or not without decoding the cards action
         valid_for_removal_action = False
+        ignore_same_id_delay = False
 
         if self._timer_thread is not None:
             self._logger.debug(f"card_removal_timer_thread.native_id = {self._timer_thread.ident}")
@@ -231,11 +237,21 @@ class ReaderRunner(threading.Thread):
                     elif self._cfg_log_ignored_cards is True:
                         self._logger.debug(f"'Ignoring card id {card_id} due to same-card-delay ({self._cfg_same_id_delay}s)")
                     previous_time = time.time()
+                    # reset no card id counter
+                    self._no_card_id_counter = 0
                 else:
                     # Time-out for reader internal error resulting in empty string: to be ignored
-                    self._logger.debug("No card detected, waiting for next card ...")
-                    # reset previous_id
-                    previous_id = ''
+                    self._no_card_id_counter += 1
+                    if self._no_card_id_counter <= self._cfg_allow_no_card_id_for_iterations and previous_id:
+                        self._logger.debug("Ignore no card detected (%dx), use previous card id: %s", self._no_card_id_counter, previous_id)
+                        self.publisher.send(self.topic, previous_id)
+                        if valid_for_removal_action and self._timer_thread is not None:
+                            # Still trigger the timer watchdog while assuming card is present
+                            self._timer_thread.trigger.set()
+                    else:
+                        self._logger.debug("No card detected, waiting for next card ...")
+                        # reset previous_id
+                        previous_id = ''
                 # Slow down the card reading while loop in case card is placed permanently on reader
                 self._cancel.wait(timeout=0.2)
                 if self._timer_thread is not None:
