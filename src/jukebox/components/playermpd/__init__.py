@@ -616,7 +616,7 @@ class PlayerMPD:
         with self.mpd_lock:
             is_second_swipe = self.music_player_status['player_status']['last_played_folder'] == folder
         if self.second_swipe_action is not None and is_second_swipe:
-            logger.debug('Calling second swipe action')
+            logger.debug('Calling second swipe action for play_card')
 
             # run callbacks before second_swipe_action is invoked
             play_card_callbacks.run_callbacks(folder, PlayCardState.secondSwipe)
