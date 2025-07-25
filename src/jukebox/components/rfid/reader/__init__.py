@@ -61,7 +61,7 @@ class CardRemovalTimerClass(threading.Thread):
     A timer watchdog thread that calls timeout_action on time-out
 
     """
-    def __init__(self, on_timeout_callback, logger: logging.Logger = None):
+    def __init__(self, on_timeout_callback, logger: logging.Logger = None, same_id_delay: float = 1.0):
         """
         :param on_timeout_callback: The function to execute on time-out
         """
@@ -69,6 +69,7 @@ class CardRemovalTimerClass(threading.Thread):
         self._logger = logger if logger is not None else logging.getLogger('jb.rfid.cardremove')
         self.trigger = threading.Event()
         self.timeout_action = on_timeout_callback
+        self.same_id_delay = same_id_delay
 
     def run(self):
         self._logger.debug("CardRemovalTimerClass watchdog started")
@@ -78,11 +79,13 @@ class CardRemovalTimerClass(threading.Thread):
             time.sleep(0.2)
             # This is the actual timer:
             # self.trigger.wait() aborts immediately when trigger.is_set becomes True
-            self.trigger.wait(1)
+            # the wait needs to be longer than the same_id_delay to avoid calling the timeout_action if the same card_id is still present
+            self.trigger.wait(self.same_id_delay + 0.5)
             if self.trigger.is_set():
                 has_timed_out = False
             else:
                 if not has_timed_out:
+                    self._logger.debug("CardRemovalTimerClass: Triggering timeout action")
                     self.timeout_action()
                 # Save that we have timed out before, so time-out event handler is run only on the first time out
                 has_timed_out = True
@@ -122,7 +125,7 @@ class ReaderRunner(threading.Thread):
         self._timer_thread = None
         if self._cfg_place_not_swipe:
             self._timer_thread = CardRemovalTimerClass(utils.bind_rpc_command(self._default_removal_action, dereference=False,
-                                                                              logger=self._logger))
+                                                                              logger=self._logger), same_id_delay=self._cfg_same_id_delay)
             self._timer_thread.daemon = True
             self._timer_thread.name = f"{reader_cfg_key}CRemover"
             self._timer_thread.start()
@@ -174,7 +177,7 @@ class ReaderRunner(threading.Thread):
                         # (2) Log this: do this first to provide log entry in case something does not run through
                         self._logger.info(f"Received card id = '{card_id}'")
 
-                        previous_id = card_id
+                        ignore_same_id_delay = False
                         valid_for_removal_action = False
 
                         # (3) Check if this card is in the card database
@@ -194,12 +197,8 @@ class ReaderRunner(threading.Thread):
 
                             if card_action is not None:
                                 # (6) Override card individual parameters
-                                if card_action.get('ignore_same_id_delay', False):
-                                    # If this is a 'ignore_same_id_delay' card, clear the previous ID:
-                                    # This very neatly allows (without overhead) that the card can trigger the command again
-                                    # without waiting for same_id_delay
-                                    previous_id = ''
-                                elif self._timer_thread is not None:
+                                ignore_same_id_delay = card_action.get('ignore_same_id_delay', False)
+                                if not ignore_same_id_delay and self._timer_thread is not None:
                                     # Only activate removal action if ignore_same_id_delay is False
                                     # Reason: There is no use case for a card with fast-repeat action (e.g. volume incr)
                                     # and common card removal action. Disallow that to card config a little easier
@@ -207,7 +206,7 @@ class ReaderRunner(threading.Thread):
                                     if valid_for_removal_action:
                                         self._timer_thread.trigger.set()
 
-                                # (7) Finally trigger action
+                                # (7) Finally trigger action, if card_id changed
                                 #     Option A) plugs.call_ignore_errors(): it is thread safe but blocks, there is no Queue!
                                 #     Option B) Through the RPC client. A little overhead but uses the same
                                 #               communication channel as external IFs
@@ -216,20 +215,27 @@ class ReaderRunner(threading.Thread):
                                 # TODO: This call happens from the reader thread, which is not necessarily what we want ...
                                 # TODO: Change to RPC call to transfer execution into main thread
                                 rfid_card_detect_callbacks.run_callbacks(card_id, RfidCardDetectState.isRegistered)
-                                plugs.call_ignore_errors(card_action['package'], card_action['plugin'], card_action['method'],
+                                if card_id != previous_id:
+                                    self._logger.debug(f"Running card action: {utils.rpc_call_to_str(card_action)}")
+                                    plugs.call_ignore_errors(card_action['package'], card_action['plugin'], card_action['method'],
                                                          args=card_action['args'], kwargs=card_action['kwargs'])
 
                         else:
                             rfid_card_detect_callbacks.run_callbacks(card_id, RfidCardDetectState.isUnkown)
                             self._logger.info(f"Unknown card: '{card_id}'")
                             self.publisher.send(self.topic, card_id)
+                        # If this is a 'ignore_same_id_delay' card, clear the previous ID:
+                        # This very neatly allows (without overhead) that the card can trigger the command again
+                        # without waiting for same_id_delay
+                        previous_id = '' if ignore_same_id_delay else card_id
                     elif self._cfg_log_ignored_cards is True:
                         self._logger.debug(f"'Ignoring card id {card_id} due to same-card-delay ({self._cfg_same_id_delay}s)")
                     previous_time = time.time()
                 else:
                     # Time-out for reader internal error resulting in empty string: to be ignored
                     self._logger.debug("No card detected, waiting for next card ...")
-                    pass
+                    # reset previous_id
+                    previous_id = ''
                 # Slow down the card reading while loop in case card is placed permanently on reader
                 self._cancel.wait(timeout=0.2)
                 if self._timer_thread is not None:
