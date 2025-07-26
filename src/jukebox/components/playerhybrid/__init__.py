@@ -134,8 +134,10 @@ class PlayerHybrid:
         logger.debug(f"Playing single song: {song_url}")
         if song_url.startswith('spotify:'):
             self.set_current_player(self._player_spotify)
+            self._player_mpd.stop()
         else:
             self.set_current_player(self._player_mpd)
+            self._player_spotify.stop()
         self.current_player.play_single(song_url)
         
 
