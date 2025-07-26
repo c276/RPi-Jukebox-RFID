@@ -1,13 +1,25 @@
 '1196182664450704':
-  alias: play_folder
-  args:
-  - Sing-mit-mir-Kinderlieder-2
-# Die Vogelhochzeit
-'3810619155':
   alias: play_spotify
   args:
-  - spotify:playlist:6kGrcf0CtV6NYNoIFZkGFo
+  - spotify:playlist:0i4z94OvWz5cI2h6hSyEBw
+'3810619155':
+  alias: play_single
+  args:
+  - 04 - We Don't Talk About Bruno.mp3
 '1241266936156816':
   alias: play_single
   args:
   - Sing-mit-mir-Kinderlieder-2/26 - Die Affen rasen durch den Wald.mp3
+# Spotify:
+# - spotify:playlist:0i4z94OvWz5cI2h6hSyEBw # Mattis Lieblingssongs
+# - spotify:playlist:5m1vPC45vK6zd2JDWRB1Dl # Schlaflieder Tonie - Fuchs
+# - spotify:playlist:4YROXhjdAiQV2rbSqvK7SO # Der Grüffelo und das Grüffelokind
+# - spotify:playlist:3cSPHwwmaZ4ZUFDHLeUUSf # Kinderlieder Mix
+# - spotify:playlist:3Y2mDWdni4h0AlsQzGn0x1 # Schlaflieder
+# - spotify:playlist:5vvdAx1u0rK43v1M3BzzJZ # Regenbogenfisch Hörspiel
+# - spotify:playlist:4ipXOmPWe4jXudhVcaSMme # Kinder Spiel- und Bewegungslieder
+# - spotify:playlist:7mMf5TZJ7HKXzBQ9zFx6gn # Petterson und Findus Liederalbum zur TV-Serie
+# - spotify:track:5WVnCEXZ58GEnS6QjpO2nI # Mah Na Mah Na
+# - spotify:track:3f6DYnGGotbf7JxF7jqK3I # Jimba Jimba
+# - spotify:track:1rVZFaoZxCMXmn7okw0ykM # Wir Fröschelein
+# - spotify:track:3y4rjMXrUQQiIQ3NaQJYPv # Sommersonnenspaß Petterson und Findus
