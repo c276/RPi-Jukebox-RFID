@@ -487,6 +487,7 @@ class PlayerSpotify:
 
     @plugs.tag
     def playerstatus(self):
+        self._update_player_status()
         return self.music_player_status
 
     @plugs.tag
