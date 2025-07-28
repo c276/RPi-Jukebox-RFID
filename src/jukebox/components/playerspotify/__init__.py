@@ -63,6 +63,28 @@ class PlayerSpotifyStatus:
     def dict(self):
         return {k: str(v) for k, v in asdict(self).items()}
 
+
+class SafeSpotifyWrapper:
+    def __init__(self, spotipy_client, error_sound: str = '/home/pi/RPi-Jukebox-RFID/resources/audio/error.wav'):
+        self._client = spotipy_client
+        self._error_sound_path = error_sound
+
+    def __getattr__(self, name):
+        attr = getattr(self._client, name)
+        if callable(attr):
+            def safe_call(*args, **kwargs):
+                try:
+                    return attr(*args, **kwargs)
+                except Exception as e:
+                    logger.error(f"[Spotify-Error] Method '{name}' failed with: {e}")
+                    wave_obj = simpleaudio.WaveObject.from_wave_file(self._error_sound_path)
+                    wave_obj.play()
+                    return None
+            return safe_call
+        else:
+            return attr
+
+
 class PlayerSpotify:
 
     current_uri = None
@@ -77,7 +99,7 @@ class PlayerSpotify:
             open_browser=False,
             show_dialog=True
         )
-        self.sp = self.authenticate()
+        self.sp = SafeSpotifyWrapper(self.authenticate())
         self.device_id = self.get_device_id()
 
         self.nvm = nv_manager()
@@ -124,13 +146,19 @@ class PlayerSpotify:
     def authenticate(self):
         token_info = self.sp_oauth.get_cached_token()
         if not token_info:
-            print("\nPlease authenticate Spotify manually:")
-            auth_url = self.sp_oauth.get_authorize_url()
-            print(f"Open the following URL and paste the redirect URL after login:\n{auth_url}")
-            response = input("Paste redirect URL here: ").strip()
-            code = self.sp_oauth.parse_response_code(response)
-            token_info = self.sp_oauth.get_access_token(code)
+            logger.error("Please authenticate Spotify manually and restart the client.")
+            return None
         return spotipy.Spotify(auth=token_info['access_token'])
+
+    def authenticate_manual(self):
+        print("\nPlease authenticate Spotify manually:")
+        auth_url = self.sp_oauth.get_authorize_url()
+        print(f"Open the following URL and paste the redirect URL after login:\n{auth_url}")
+        response = input("Paste redirect URL here: ").strip()
+        code = self.sp_oauth.parse_response_code(response)
+        token_info = self.sp_oauth.get_access_token(code)
+        return spotipy.Spotify(auth=token_info['access_token'])
+
 
     def refresh(self):
         token_info = self.sp_oauth.get_cached_token()
