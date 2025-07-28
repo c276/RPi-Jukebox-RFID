@@ -27,6 +27,7 @@ CLIENT_ID_PATH = os.path.expanduser('~/.config/spotifyd/CLIENT_ID')
 CLIENT_SECRET_PATH = os.path.expanduser('~/.config/spotifyd/CLIENT_SECRET')
 REDIRECT_URI = 'https://example.com/callback'
 CACHE_PATH = os.path.expanduser('~/.cache/spotify_controller')
+ERROR_SOUND_PATH = '/home/pi/RPi-Jukebox-RFID/resources/audio/error.wav'
 
 SCOPE = (
     "user-modify-playback-state "
@@ -65,7 +66,7 @@ class PlayerSpotifyStatus:
 
 
 class SafeSpotifyWrapper:
-    def __init__(self, spotipy_client, error_sound: str = '/home/pi/RPi-Jukebox-RFID/resources/audio/error.wav'):
+    def __init__(self, spotipy_client, error_sound: str = ERROR_SOUND_PATH):
         self._client = spotipy_client
         self._error_sound_path = error_sound
 
@@ -144,13 +145,14 @@ class PlayerSpotify:
     def device_id(self):
         if self._device_id:
             return self._device_id
-        else:
-            device_id = self.get_device_id()
-            if not device_id:
-                logger.error("No Spotify device found. Please check your Spotify setup.")
-                return None
-            self._device_id = device_id
-            return self._device_id
+        device_id = self.get_device_id()
+        if not device_id:
+            logger.error("No Spotify device found. Please check your Spotify setup.")
+            wave_obj = simpleaudio.WaveObject.from_wave_file(ERROR_SOUND_PATH)
+            wave_obj.play()
+            return None
+        self._device_id = device_id
+        return self._device_id
 
     def exit(self):
         self.sp.pause_playback(device_id=self.device_id)
@@ -206,6 +208,8 @@ class PlayerSpotify:
     def play_uri(self, uri):
         self.refresh()
         self.current_uri = uri
+        if not self.device_id:
+            return
         if uri.startswith('spotify:playlist:'):
             self.sp.start_playback(device_id=self.device_id, context_uri=uri)
         elif uri.startswith('spotify:track:'):
@@ -215,6 +219,8 @@ class PlayerSpotify:
 
     def playback_control(self, command):
         self.refresh()
+        if not self.device_id:
+            return
         try:
             if command == "play":
                 self.sp.start_playback(device_id=self.device_id)
@@ -327,7 +333,7 @@ class PlayerSpotify:
 
             self.play()  # resume if needed
         else:
-            print("Cannot seek: No track currently playing.")
+            self.logger.error("Cannot seek: No track currently playing.")
 
     @plugs.tag
     def rewind(self):
@@ -382,6 +388,8 @@ class PlayerSpotify:
 
     @plugs.tag
     def play_single(self, song_url):
+        if not self.device_id:
+            return
         is_second_swipe = self.current_uri == song_url
         if is_second_swipe and self.second_swipe_action:
             logger.debug("Second swipe detected, resuming playback.")
