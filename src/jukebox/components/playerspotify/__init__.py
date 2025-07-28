@@ -221,15 +221,25 @@ class PlayerSpotify:
         self.refresh()
         if not self.device_id:
             return
+        playback = self.sp.current_playback()
+        if not playback:
+            self.logger.debug("No active playback. Cannot do playback control.")
+            return
         try:
             if command == "play":
                 self.sp.start_playback(device_id=self.device_id)
             elif command in ("pause", "stop"):
                 self.sp.pause_playback(device_id=self.device_id)
             elif command == "next":
-                self.sp.next_track(device_id=self.device_id)
+                if ":track:" in playback["uri"]:
+                    self.seek(0)
+                else:
+                    self.sp.next_track(device_id=self.device_id)
             elif command == "previous":
-                self.sp.previous_track(device_id=self.device_id)
+                if ":track:" in playback["uri"]:
+                    self.seek(0)
+                else:
+                    self.sp.previous_track(device_id=self.device_id)
             elif command == "toggle":
                 playback = self.sp.current_playback()
                 if playback and playback['is_playing']:
@@ -319,21 +329,10 @@ class PlayerSpotify:
     @plugs.tag
     def seek(self, seconds: int):
         self.refresh()
-        logger.debug(f"Fast forwarding {seconds} seconds.")
-        playback = self.sp.current_playback()
-        if playback and playback["item"] and playback["progress_ms"]:
-            current_position = playback["progress_ms"]
-            track_duration = playback["item"]["duration_ms"]
-            jump_to = max(0, min(current_position + seconds*1000, track_duration - 1000))
-
-            self.sp.seek_track(position_ms=int(jump_to), device_id=self.device_id)
-            time.sleep(0.5)  # allow API to update position
-
-            playback = self.sp.current_playback()
-
-            self.play()  # resume if needed
-        else:
-            self.logger.error("Cannot seek: No track currently playing.")
+        logger.debug(f"Seek track to {seconds} seconds.")
+        self.sp.seek_track(position_ms=seconds, device_id=self.device_id)
+        time.sleep(0.5)  # allow API to update position
+        self.play()  # resume if needed
 
     @plugs.tag
     def rewind(self):
@@ -404,6 +403,15 @@ class PlayerSpotify:
     @plugs.tag
     def fast_forward(self, seconds: float = 1):
         """ Fast forward the current song by a given number of seconds. Rewind if seconds is negative."""
+        logger.debug(f"Fast forwarding {seconds} seconds.")
+        playback = self.sp.current_playback()
+        if playback and playback["item"] and playback["progress_ms"]:
+            current_position = playback["progress_ms"]
+            track_duration = playback["item"]["duration_ms"]
+            jump_to = max(0, min(current_position + seconds*1000, track_duration - 1000))
+            self.seek_track(int(jump_to))
+        else:
+            self.logger.error("Cannot fast-forward: No track currently playing.")
         self.seek(int(seconds))
 
     @plugs.tag
