@@ -23,3 +23,11 @@
 # - spotify:track:3f6DYnGGotbf7JxF7jqK3I # Jimba Jimba
 # - spotify:track:1rVZFaoZxCMXmn7okw0ykM # Wir Fröschelein
 # - spotify:track:3y4rjMXrUQQiIQ3NaQJYPv # Sommersonnenspaß Petterson und Findus
+'1294039199322768':
+  alias: play_spotify
+  args:
+  - spotify:track:5WVnCEXZ58GEnS6QjpO2nI
+'1291840176067216':
+  alias: play_single
+  args:
+  - Sing-mit-mir-Kinderlieder-2/26 - Die Affen rasen durch den Wald.mp3

@@ -23,7 +23,7 @@ modules:
   - misc
 pulse:
   # Reset system volume to this level after start. (Comment out disables and volume is not changed)
-  startup_volume: 40
+  startup_volume: 30
   # Automatically toggle output between primary and secondary audio output
   # when a device connects (Note: So far, toggle happens when ANY device connects)
   toggle_on_connect: true
