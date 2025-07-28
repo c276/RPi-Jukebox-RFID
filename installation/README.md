@@ -34,7 +34,7 @@ nano ~/RPi-Jukebox-RFID/shared/settings/spotifyd.conf # add username
 sudo cp ~/RPi-Jukebox-RFID/resources/default-services/spotifyd.service /etc/systemd/system/spotifyd.service
 sudo nano /etc/systemd/system/spotifyd.service # check if the config path is correct!
 ```
-Enable and start service
+Enable and start service (TODO: enable as user service like the jukebox daemon?!)
 ```bash
 sudo systemctl daemon-reexec
 sudo systemctl enable spotifyd
