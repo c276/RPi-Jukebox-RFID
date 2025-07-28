@@ -100,7 +100,7 @@ class PlayerSpotify:
             show_dialog=True
         )
         self.sp = SafeSpotifyWrapper(self.authenticate())
-        self.device_id = self.get_device_id()
+        self._device_id = None
 
         self.nvm = nv_manager()
         self.mpd_host = cfg.getn('playerspotify', 'host')
@@ -140,8 +140,20 @@ class PlayerSpotify:
                                                           logger)
         self._player_status = None
 
+    @property
+    def device_id(self):
+        if self._device_id:
+            return self._device_id
+        else:
+            device_id = self.get_device_id()
+            if not device_id:
+                logger.error("No Spotify device found. Please check your Spotify setup.")
+                return None
+            self._device_id = device_id
+            return self._device_id
+
     def exit(self):
-        self.sp.pause_playback(device_id=self.get_device_id())
+        self.sp.pause_playback(device_id=self.device_id)
 
     def authenticate(self):
         token_info = self.sp_oauth.get_cached_token()
