@@ -15,3 +15,33 @@ clear_c          "Clears the console screen"
 ## Installation
 
 [Install Phoniebox software](../documentation/builders/installation.md#install-phoniebox-software)
+
+[Install Spotify]
+For now, just manual installation.
+
+Download binary
+```bash
+sudo apt install curl unzip -y
+curl -LO https://github.com/Spotifyd/spotifyd/releases/latest/download/spotifyd-linux-armv7-slim.tar.gz
+tar -xzf spotifyd-linux-armv7-slim.tar.gz
+sudo mv spotifyd /usr/local/bin/
+```
+Configure
+```bash
+sudo cp ~/RPi-Jukebox-RFID/resources/default-settings/spotifyd.conf ~/RPi-Jukebox-RFID/shared/settings/spotifyd.conf
+nano ~/RPi-Jukebox-RFID/shared/settings/spotifyd.conf # add username
+ echo "spotify-password" > ~/.config/spotifyd/spotify_password # NOTE: leading space to remove command from command history!
+sudo cp ~/RPi-Jukebox-RFID/resources/default-services/spotifyd.service /etc/systemd/system/spotifyd.service
+sudo nano /etc/systemd/system/spotifyd.service # check if the config path is correct!
+```
+Enable and start service
+```bash
+sudo systemctl daemon-reexec
+sudo systemctl enable spotifyd
+sudo systemctl start spotifyd
+```
+Check with
+```bash
+journalctl -u spotifyd -f
+```
+

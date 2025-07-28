@@ -1,0 +1,9 @@
+[Unit]
+Description=Spotifyd daemon
+
+[Service]
+ExecStart=/usr/local/bin/spotifyd --no-daemon --config-path /home/pi/RPi-Jukebox-RFID/shared/settings/spotifyd.conf
+Restart=always
+
+[Install]
+WantedBy=default.target
