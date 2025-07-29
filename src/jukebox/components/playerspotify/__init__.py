@@ -140,6 +140,7 @@ class PlayerSpotify:
                                                            'none': lambda: None},
                                                           logger)
         self._player_status = None
+        self.current_uri = None
 
     @property
     def device_id(self):
@@ -221,7 +222,6 @@ class PlayerSpotify:
         self.refresh()
         if not self.device_id:
             return
-        playback = self.sp.current_playback()
         try:
             if command == "play":
                 self.sp.start_playback(device_id=self.device_id)
@@ -229,11 +229,11 @@ class PlayerSpotify:
                 self.sp.pause_playback(device_id=self.device_id)
             elif command == "next":
                 # do nothing if it is a single track, else skip to next track
-                if not (playback and "item" in playback and ":track:" in playback["item"].get("uri","")):
+                if ":track:" not in self.current_uri:
                     self.sp.next_track(device_id=self.device_id)
             elif command == "previous":
                 # start from beginning of track if it is a single track, else skip to previous track
-                if playback and ":track:" in playback.get("uri",""):
+                if ":track:" in self.current_uri:
                     self.seek(0)
                 else:
                     self.sp.previous_track(device_id=self.device_id)
