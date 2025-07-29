@@ -222,21 +222,18 @@ class PlayerSpotify:
         if not self.device_id:
             return
         playback = self.sp.current_playback()
-        if not playback:
-            self.logger.debug("No active playback. Cannot do playback control.")
-            return
         try:
             if command == "play":
                 self.sp.start_playback(device_id=self.device_id)
             elif command in ("pause", "stop"):
                 self.sp.pause_playback(device_id=self.device_id)
             elif command == "next":
-                if ":track:" in playback["uri"]:
-                    self.seek(0)
-                else:
+                # do nothing if it is a single track, else skip to next track
+                if not (playback and "item" in playback and ":track:" in playback["item"].get("uri","")):
                     self.sp.next_track(device_id=self.device_id)
             elif command == "previous":
-                if ":track:" in playback["uri"]:
+                # start from beginning of track if it is a single track, else skip to previous track
+                if playback and ":track:" in playback.get("uri",""):
                     self.seek(0)
                 else:
                     self.sp.previous_track(device_id=self.device_id)
@@ -409,10 +406,9 @@ class PlayerSpotify:
             current_position = playback["progress_ms"]
             track_duration = playback["item"]["duration_ms"]
             jump_to = max(0, min(current_position + seconds*1000, track_duration - 1000))
-            self.seek_track(int(jump_to))
+            self.seek(int(jump_to))
         else:
             self.logger.error("Cannot fast-forward: No track currently playing.")
-        self.seek(int(seconds))
 
     @plugs.tag
     def play_hold_jingle(self, jingle_path: str):
