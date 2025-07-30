@@ -16,7 +16,7 @@ from .playcontentcallback import PlayContentCallbacks, PlayCardState
 from components.playermpd import PlayerMPD
 from components.playerspotify import PlayerSpotify
 
-logger = logging.getLogger('jb.PlayerMPD')
+logger = logging.getLogger('jb.PlayerHybrid')
 cfg = jukebox.cfghandler.get_handler('jukebox')
 
 
