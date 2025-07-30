@@ -20,7 +20,7 @@ import jukebox.cfghandler
 import jukebox.utils as utils
 from jukebox.NvManager import nv_manager
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("jb.PlayerSpotify")
 cfg = jukebox.cfghandler.get_handler('jukebox')
 
 CLIENT_ID_PATH = os.path.expanduser('~/.config/spotifyd/CLIENT_ID')
@@ -48,27 +48,16 @@ def read_secret(file_path):
         logger.error(f"Error reading secret from {file_path}: {e}")
         return None
 
-@dataclass
-class PlayerSpotifyStatus:
-    status: str
-    track: Optional[str]
-    artist: Optional[str]
-    device: Optional[str]
-    is_playing: bool
-    volume: Optional[int]
-    progress_sec: int
-    duration_sec: int
-    shuffle: Optional[str]
-    repeat: Optional[str]
-
-    def dict(self):
-        return {k: str(v) for k, v in asdict(self).items()}
-
 
 class SafeSpotifyWrapper:
     def __init__(self, spotipy_client, error_sound: str = ERROR_SOUND_PATH):
         self._client = spotipy_client
         self._error_sound_path = error_sound
+        self._first_error_time = -1
+        
+    def renew_spotipy_client(self, new_client):
+        if self._client != new_client:
+            self._client = new_client
 
     def __getattr__(self, name):
         attr = getattr(self._client, name)
@@ -77,9 +66,14 @@ class SafeSpotifyWrapper:
                 try:
                     return attr(*args, **kwargs)
                 except Exception as e:
-                    logger.error(f"[Spotify-Error] Method '{name}' failed with: {e}")
+                    logger.error(f"Spotify method '{name}' failed with: {e}")
                     wave_obj = simpleaudio.WaveObject.from_wave_file(self._error_sound_path)
                     wave_obj.play()
+                    self._first_error_time = time.time() if self._first_error_time == -1 else self._first_error_time
+                    if self._first_error_time > -1 and time.time() - self._first_error_time > 60:
+                        logger.error("Spotify API error occurred multiple times. Restarting spotifyd service.")
+                        os.system("systemctl -user restart spotifyd")
+                        self._first_error_time = -1
                     return None
             return safe_call
         else:
@@ -100,7 +94,7 @@ class PlayerSpotify:
             open_browser=False,
             show_dialog=True
         )
-        self.sp = SafeSpotifyWrapper(self.authenticate())
+        self._sp = None
         self._device_id = None
 
         self.nvm = nv_manager()
@@ -139,7 +133,6 @@ class PlayerSpotify:
                                                            'next': self.next,
                                                            'none': lambda: None},
                                                           logger)
-        self._player_status = None
         self.current_uri = None
 
     @property
@@ -154,9 +147,18 @@ class PlayerSpotify:
             return None
         self._device_id = device_id
         return self._device_id
+    
+    @property
+    def sp(self):
+        if self._sp:
+            self._sp.renew_spotipy_client(self.refresh_access_token())
+        else:
+            self._sp = SafeSpotifyWrapper(self.authenticate())  
+        return self._sp
 
     def exit(self):
         self.sp.pause_playback(device_id=self.device_id)
+        self.music_player_status.save_to_json()
 
     def authenticate(self):
         token_info = self.sp_oauth.get_cached_token()
@@ -175,14 +177,14 @@ class PlayerSpotify:
         return spotipy.Spotify(auth=token_info['access_token'])
 
 
-    def refresh(self):
+    def refresh_access_token(self):
         token_info = self.sp_oauth.get_cached_token()
         if token_info and self.sp_oauth.is_token_expired(token_info):
+            logger.info("Refreshing Spotify access token...")
             token_info = self.sp_oauth.refresh_access_token(token_info['refresh_token'])
-            self.sp = spotipy.Spotify(auth=token_info['access_token'])
+        return spotipy.Spotify(auth=token_info['access_token'])
 
     def get_device_id(self):
-        self.refresh()
         devices = self.sp.devices().get('devices', [])
         for d in devices:
             if d['name'] == DEVICE_NAME:
@@ -207,7 +209,6 @@ class PlayerSpotify:
                                                          custom_action['kwargs'])
 
     def play_uri(self, uri):
-        self.refresh()
         self.current_uri = uri
         if not self.device_id:
             return
@@ -219,7 +220,6 @@ class PlayerSpotify:
             logger.error(f"Unsupported URI: {uri}")
 
     def playback_control(self, command):
-        self.refresh()
         if not self.device_id:
             return
         try:
@@ -249,7 +249,6 @@ class PlayerSpotify:
             logger.error(f"Spotify API error: {e}")
 
     def volume(self, change):
-        self.refresh()
         playback = self.sp.current_playback()
         if playback:
             vol = playback['device']['volume_percent']
@@ -257,7 +256,6 @@ class PlayerSpotify:
             self.sp.volume(new_vol, device_id=self.device_id)
 
     def current_track(self):
-        self.refresh()
         playback = self.sp.current_playback()
         if not playback or not playback.get('item'):
             return None
@@ -274,7 +272,6 @@ class PlayerSpotify:
         }
 
     def list_playlists(self):
-        self.refresh()
         playlists = self.sp.current_user_playlists()
         return [(p['name'], p['uri']) for p in playlists['items']]
 
@@ -325,7 +322,6 @@ class PlayerSpotify:
 
     @plugs.tag
     def seek(self, seconds: int):
-        self.refresh()
         logger.debug(f"Seek track to {seconds} seconds.")
         self.sp.seek_track(position_ms=seconds, device_id=self.device_id)
         time.sleep(0.5)  # allow API to update position
@@ -351,7 +347,6 @@ class PlayerSpotify:
 
     @plugs.tag
     def shuffle(self, option='toggle'):
-        self.refresh()
         current = self.sp.current_playback()
         if current:
             state = current.get('shuffle_state', False)
@@ -359,7 +354,6 @@ class PlayerSpotify:
 
     @plugs.tag
     def repeat(self, option='toggle'):
-        self.refresh()
         current = self.sp.current_playback()
         if current:
             mode = current.get('repeat_state', 'off')
@@ -387,6 +381,10 @@ class PlayerSpotify:
         if not self.device_id:
             return
         is_second_swipe = self.current_uri == song_url
+        playback = self.sp.current_playback()
+        if is_second_swipe and playback and playback.get('is_playing', False):
+            logger.debug("Skip sending play command since spotifyd is already playing the right song.")
+            return
         if is_second_swipe and self.second_swipe_action:
             logger.debug("Second swipe detected, resuming playback.")
             self.second_swipe_action()
@@ -457,37 +455,26 @@ class PlayerSpotify:
     def _update_player_status(self):
         playback = self.sp.current_playback()
         if not playback or not playback.get('item'):
-            artist = None
-            is_playing = False
-            device = None
-            volume = None
-            progress = 0
-            duration = 0
-            shuffle = None
-            repeat = None
+            self.music_player_status['artist'] = None
+            self.music_player_status['status'] = 'paused'
+            self.music_player_status['track'] = None
+            self.music_player_status['device'] = None
+            self.music_player_status['volume'] = None
+            self.music_player_status['progress'] = 0
+            self.music_player_status['duration'] = 0
+            self.music_player_status['shuffle'] = None
+            self.music_player_status['repeat'] = None
         else:
             item = playback['item']
-            artist = ", ".join([a['name'] for a in item['artists']])
-            track = item['name']
-            is_playing = playback['is_playing']
-            device = playback['device']['name']
-            volume = playback['device']['volume_percent']
-            progress = playback['progress_ms'] // 1000
-            duration = item['duration_ms'] // 1000
-            shuffle = playback['shuffle_state']
-            repeat = playback['repeat_state']
-
-        self._player_status = PlayerSpotifyStatus(status="playing" if is_playing else "paused",
-                                                 track=track,
-                                                 artist=artist,
-                                                 device=device,
-                                                 is_playing=is_playing,
-                                                 volume=volume,
-                                                 progress_sec=progress,
-                                                 duration_sec=duration,
-                                                 shuffle=shuffle,
-                                                 repeat=repeat)
-        self.music_player_status = self._player_status.dict()
+            self.music_player_status['artist'] = ", ".join([a['name'] for a in item['artists']])
+            self.music_player_status['status'] = 'playing' if playback['is_playing'] else 'paused'
+            self.music_player_status['track'] = item['name']
+            self.music_player_status['device'] = playback['device']['name']
+            self.music_player_status['volume'] = playback['device']['volume_percent']
+            self.music_player_status['progress'] = playback['progress_ms'] // 1000
+            self.music_player_status['duration'] = item['duration_ms'] // 1000
+            self.music_player_status['shuffle'] = playback['shuffle_state']
+            self.music_player_status['repeat'] = playback['repeat_state']
 
     @plugs.tag
     def playerstatus(self):
