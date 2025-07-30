@@ -28,20 +28,28 @@ sudo mv spotifyd /usr/local/bin/
 ```
 Configure
 ```bash
-sudo cp ~/RPi-Jukebox-RFID/resources/default-settings/spotifyd.conf ~/RPi-Jukebox-RFID/shared/settings/spotifyd.conf
-nano ~/RPi-Jukebox-RFID/shared/settings/spotifyd.conf # add username
+cp ~/RPi-Jukebox-RFID/resources/default-settings/spotifyd.conf ~/RPi-Jukebox-RFID/shared/settings/spotifyd.conf
+ echo "spotify-user" > ~/.config/spotifyd/spotify_username # NOTE: leading space to remove command from command history!
  echo "spotify-password" > ~/.config/spotifyd/spotify_password # NOTE: leading space to remove command from command history!
-sudo cp ~/RPi-Jukebox-RFID/resources/default-services/spotifyd.service /etc/systemd/system/spotifyd.service
-sudo nano /etc/systemd/system/spotifyd.service # check if the config path is correct!
+sudo cp ~/RPi-Jukebox-RFID/resources/default-services/spotifyd.service usr/lib/systemd/user/spotifyd.service
+sudo nano usr/lib/systemd/user/spotifyd.service # check if the config path is correct!
 ```
-Enable and start service (TODO: enable as user service like the jukebox daemon?!)
+Enable and start user service 
 ```bash
-sudo systemctl daemon-reexec
-sudo systemctl enable spotifyd
-sudo systemctl start spotifyd
+systemctl --user daemon-reexec
+systemctl --user daemon-reload
+systemctl --user enable spotifyd
+systemctl --user start spotifyd
+```
+Optional: enable linger for current user
+```bash
+sudo loginctl enable-linger $USER
 ```
 Check with
 ```bash
 journalctl -u spotifyd -f
 ```
-
+or
+```bash
+systemctl --user status spotifyd
+```
