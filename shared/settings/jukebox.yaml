@@ -139,7 +139,7 @@ timers:
   idle_shutdown:
     # If you want the box to shutdown on inactivity automatically, configure timeout_sec with a number of seconds (at least 60).
     # Inactivity is defined as: no music playing, no active SSH sessions, no changes in configs or audio content.
-    # Activate with 15 minutes timeout.
+    # Activate with 15 minutes (900s) or 45 minutes (2700) timeout.
     timeout_sec: 900
   # These timers are always disabled after start
   # The following values only give the default values.

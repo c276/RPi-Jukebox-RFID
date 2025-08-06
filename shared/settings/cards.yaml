@@ -9,7 +9,7 @@
 '1241266936156816':
   alias: play_single
   args:
-  - Sing-mit-mir-Kinderlieder-2/26 - Die Affen rasen durch den Wald.mp3
+  - Sing-mit-mir-Kinderlieder-2/00 - 26 - Die Affen rasen durch den Wald.mp3
 # Spotify:
 # - spotify:playlist:0i4z94OvWz5cI2h6hSyEBw # Mattis Lieblingssongs
 # - spotify:playlist:5m1vPC45vK6zd2JDWRB1Dl # Schlaflieder Tonie - Fuchs
@@ -24,21 +24,21 @@
 # - spotify:track:1rVZFaoZxCMXmn7okw0ykM # Wir Fröschelein
 # - spotify:track:3y4rjMXrUQQiIQ3NaQJYPv # Sommersonnenspaß Petterson und Findus
 '1294039199322768':
-  alias: play_spotify
+  alias: play_folder
   args:
-  - spotify:track:5WVnCEXZ58GEnS6QjpO2nI # Mah Na Mah Na
+  - Sesame-Street-All-Time-Favorites-1
 '1291840176067216':
-  alias: play_single
+  alias: play_folder
   args:
-  - Sing-mit-mir-Kinderlieder-2/26 - Die Affen rasen durch den Wald.mp3
+  - Sing-mit-mir-Kinderlieder-2
 '1292939687694992':
   alias: play_spotify
   args:
   - spotify:playlist:4YROXhjdAiQV2rbSqvK7SO # Der Grüffelo und das Grüffelokind
 '1295138710950544':
-  alias: play_spotify
+  alias: play_folder
   args:
-  - spotify:track:3f6DYnGGotbf7JxF7jqK3I # Jimba Jimba
+  - Sing-mit-mir-Kinderlieder-4
 '1345716245828240':
   alias: play_spotify
   args:
@@ -48,9 +48,9 @@
   args:
   - spotify:playlist:6kGrcf0CtV6NYNoIFZkGFo # Rolfs Vogelhochzeit
 '1239067912901264':
-  alias: play_spotify
+  alias: play_folder
   args:
-  - spotify:track:1rVZFaoZxCMXmn7okw0ykM # Wir Fröschelein
+  - Die-30-besten-Spiel-und-Bewegungslieder
 '1220371920261776':
   alias: play_single
   args:
