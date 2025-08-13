@@ -53,3 +53,16 @@ or
 ```bash
 systemctl --user status spotifyd
 ```
+
+[Enable logfile for jukebox]
+Copy service and timer files
+```bash
+sudo cp resources/default-services/jukebox-log-export.service ~/.config/systemd/user/.
+sudo cp resources/default-services/jukebox-log-export.timer ~/.config/systemd/user/.
+```
+Enable deamon & start timer
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now jukebox-log-export.timer
+```
+

@@ -1,0 +1,6 @@
+[Unit]
+Description=Export last 30 minutes of jukebox-daemon logs to a file
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'journalctl --user -u jukebox-daemon --since "30 minutes ago" --output short-iso > /home/pi/logs/jukebox.log'
