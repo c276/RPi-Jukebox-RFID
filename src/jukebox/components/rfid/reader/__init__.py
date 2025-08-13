@@ -80,7 +80,7 @@ class CardRemovalTimerClass(threading.Thread):
             # This is the actual timer:
             # self.trigger.wait() aborts immediately when trigger.is_set becomes True
             # the wait needs to be longer than the same_id_delay to avoid calling the timeout_action if the same card_id is still present
-            self.trigger.wait(self.same_id_delay + 0.5)
+            self.trigger.wait(self.same_id_delay + 1.0)
             if self.trigger.is_set():
                 has_timed_out = False
             else:
@@ -178,6 +178,7 @@ class ReaderRunner(threading.Thread):
                     # on first read-out card_id != previous_id. For further iterations, the
                     # validity state needs to be saved in valid_for_removal_action
                     if valid_for_removal_action and self._timer_thread is not None and card_id == previous_id:
+                        self._logger.debug("Set timer trigger for card id '%s', valid_for_removal_action.", card_id)
                         self._timer_thread.trigger.set()
                     if card_id != previous_id or (time.time() - previous_time) >= self._cfg_same_id_delay:
                         # (2) Log this: do this first to provide log entry in case something does not run through
@@ -210,6 +211,7 @@ class ReaderRunner(threading.Thread):
                                     # and common card removal action. Disallow that to card config a little easier
                                     valid_for_removal_action = not card_entry.get('ignore_card_removal_action', False)
                                     if valid_for_removal_action:
+                                        self._logger.debug("Set timer trigger for card id '%s', card_action!=None.", card_id)
                                         self._timer_thread.trigger.set()
 
                                 # (7) Finally trigger action, if card_id changed
@@ -247,6 +249,7 @@ class ReaderRunner(threading.Thread):
                         self.publisher.send(self.topic, previous_id)
                         if valid_for_removal_action and self._timer_thread is not None:
                             # Still trigger the timer watchdog while assuming card is present
+                            self._logger.debug("Set timer trigger for card id '%s', no_card_id_counter: %d.", card_id, self._no_card_id_counter)
                             self._timer_thread.trigger.set()
                     else:
                         self._logger.debug("No card detected, waiting for next card ...")
