@@ -69,7 +69,7 @@ jingle:
   # Use file ending to choose player from available jingle services
   service: auto
   # The playback volume of the jingles. (Comment out means use current system volume)
-  volume: 30
+  volume: 50
 jinglemp3:
   # Config of the MP3 Jingle Service
   # These parameters are passed to the mpeg123 player (e.g. [-d 2])
