@@ -42,7 +42,7 @@ def get_signal_strength():
         return None
 
 try:
-    LED.color = (1.0, 0, 0)  # Start with red
+    LED.color = (0.1, 0, 0)  # Start with red
     sleep_interval = 1.0
     while True:
         voltage = ina.voltage()
@@ -50,11 +50,11 @@ try:
         print(f"Akkuspannung: {voltage:.2f} V, wlan signal: {wlan_signal} dBm")
 
         if (not wlan_signal) or (wlan_signal < -80):
-            LED.color = (1, 0, 0)
+            LED.color = (0.1, 0, 0)
         elif -60 >= wlan_signal >= -80:
-            LED.color = (1, 0.15, 0)
+            LED.color = (0.1, 0.025, 0)
         elif wlan_signal > -60:
-            LED.color = (0, 1, 0)
+            LED.color = (0, 0.1, 0)
         if voltage < SHUTDOWN:
             if shutdown_start is None:
                 shutdown_start = time.time()
