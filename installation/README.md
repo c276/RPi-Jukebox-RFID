@@ -66,3 +66,11 @@ systemctl --user daemon-reload
 systemctl --user enable --now jukebox-log-export.timer
 ```
 
+[Battery monitor]
+with ina219
+```bash
+sudo cp /home/pi/RPi-Jukebox-RFID/resources/default-services/battery-monitor.service /etc/systemd/system/battery-monitor.service
+
+sudo systemctl enable battery-monitor.service
+sudo systemctl start battery-monitor.service
+```

@@ -1,0 +1,11 @@
+[Unit]
+Description=Battery Monitor Service
+After=multi-user.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/pi/RPi-Jukebox-RFID/tools/battery_monitor.py
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target
