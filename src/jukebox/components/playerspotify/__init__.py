@@ -54,7 +54,7 @@ class SafeSpotifyWrapper:
         self._client = spotipy_client
         self._error_sound_path = error_sound
         self._first_error_time = -1
-        
+
     def renew_spotipy_client(self, new_client):
         if self._client != new_client:
             self._client = new_client
@@ -147,13 +147,13 @@ class PlayerSpotify:
             return None
         self._device_id = device_id
         return self._device_id
-    
+
     @property
     def sp(self):
         if self._sp:
             self._sp.renew_spotipy_client(self.refresh_access_token())
         else:
-            self._sp = SafeSpotifyWrapper(self.authenticate())  
+            self._sp = SafeSpotifyWrapper(self.authenticate())
         return self._sp
 
     def exit(self):
@@ -382,9 +382,7 @@ class PlayerSpotify:
             return
         is_second_swipe = self.current_uri == song_url
         playback = self.sp.current_playback()
-        if is_second_swipe and playback and playback.get('is_playing', False):
-            logger.debug("Skip sending play command since spotifyd is already playing the right song.")
-            return
+
         if is_second_swipe and self.second_swipe_action:
             logger.debug("Second swipe detected, resuming playback.")
             self.second_swipe_action()
