@@ -16,6 +16,7 @@ ina.configure()
 
 # LED Setup
 LED = RGBLED(red=0, green=5, blue=6)
+intensity = 0.1
 
 # Voltage thresholds
 WARNING = 4.9   # V
@@ -42,7 +43,7 @@ def get_signal_strength():
         return None
 
 try:
-    LED.color = (0.1, 0, 0)  # Start with red
+    LED.color = (intensity, 0, 0)  # Start with red
     sleep_interval = 1.0
     while True:
         voltage = ina.voltage()
@@ -50,11 +51,11 @@ try:
         print(f"Akkuspannung: {voltage:.2f} V, wlan signal: {wlan_signal} dBm")
 
         if (not wlan_signal) or (wlan_signal < -80):
-            LED.color = (0.1, 0, 0)
+            LED.color = (intensity, 0, 0)
         elif -60 >= wlan_signal >= -80:
-            LED.color = (0.1, 0.025, 0)
+            LED.color = (intensity, intensity*0.25, 0)
         elif wlan_signal > -60:
-            LED.color = (0, 0.1, 0)
+            LED.color = (0, intensity, 0)
         if voltage < SHUTDOWN:
             if shutdown_start is None:
                 shutdown_start = time.time()
