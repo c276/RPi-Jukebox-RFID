@@ -180,7 +180,7 @@ def build_output_device(name: str, config: Dict):
 
 
 def _build_all_output_devices():
-    output_devices=cfg_gpio.getn('output_devices', default={})
+    output_devices = cfg_gpio.getn('output_devices', default={})
     if not output_devices:
         logger.warning(f"Error building output device '{output_devices}'. Ignoring this device configuration. ")
         return

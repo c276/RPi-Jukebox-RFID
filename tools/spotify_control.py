@@ -3,7 +3,6 @@ from spotipy.oauth2 import SpotifyOAuth
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
 import sys
-import time
 
 CLIENT_ID = ''
 CLIENT_SECRET = ''
@@ -18,6 +17,7 @@ SCOPE = (
 )
 DEVICE_NAME = "spotifyd-pi"  # Change this to your spotifyd device name
 
+
 def get_client_id(file_path='/home/pi/.config/spotifyd/CLIENT_ID'):
     try:
         with open(file_path, 'r') as file:
@@ -25,6 +25,7 @@ def get_client_id(file_path='/home/pi/.config/spotifyd/CLIENT_ID'):
     except FileNotFoundError:
         print(f"Client ID file '{file_path}' not found.")
         return None
+
 
 def get_client_secret(file_path='/home/pi/.config/spotifyd/CLIENT_SECRET'):
     try:
@@ -34,6 +35,7 @@ def get_client_secret(file_path='/home/pi/.config/spotifyd/CLIENT_SECRET'):
         print(f"Client ID file '{file_path}' not found.")
         return None
 
+
 sp_oauth = SpotifyOAuth(client_id=get_client_id(),
                         client_secret=get_client_secret(),
                         redirect_uri=REDIRECT_URI,
@@ -41,6 +43,7 @@ sp_oauth = SpotifyOAuth(client_id=get_client_id(),
                         cache_path=".cache",
                         open_browser=False,
                         show_dialog=True)
+
 
 def get_spotify_client():
     token_info = sp_oauth.get_cached_token()
@@ -77,7 +80,7 @@ def list_playlists(sp):
     playlists = sp.current_user_playlists()
     print("\nYour Playlists:")
     for i, playlist in enumerate(playlists['items']):
-        print(f"{i+1}. {playlist['name']} (Tracks: {playlist['tracks']['total']})")
+        print(f"{i + 1}. {playlist['name']} (Tracks: {playlist['tracks']['total']})")
     return playlists['items']
 
 

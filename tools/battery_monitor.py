@@ -23,7 +23,7 @@ WARNING = 4.9   # V
 CRITICAL = 4.7  # V
 SHUTDOWN = 4.6  # V
 
-shutdown_start = None # Time when shutdown sequence started
+shutdown_start = None  # Time when shutdown sequence started
 
 
 def led_blink(interval=0.5):
@@ -42,6 +42,7 @@ def get_signal_strength():
     except subprocess.CalledProcessError:
         return None
 
+
 try:
     LED.color = (intensity, 0, 0)  # Start with red
     sleep_interval = 1.0
@@ -53,7 +54,7 @@ try:
         if (not wlan_signal) or (wlan_signal < -80):
             LED.color = (intensity, 0, 0)
         elif -60 >= wlan_signal >= -80:
-            LED.color = (intensity, intensity*0.25, 0)
+            LED.color = (intensity, intensity * 0.25, 0)
         elif wlan_signal > -60:
             LED.color = (0, intensity, 0)
         if voltage < SHUTDOWN:
@@ -78,4 +79,3 @@ except KeyboardInterrupt:
 
 finally:
     LED.off()
-

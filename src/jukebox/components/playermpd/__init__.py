@@ -246,7 +246,14 @@ class PlayerMPD:
         Decodes the replay action from the configuration file and sets it accordingly.
         """
         cfg_repeat_action = cfg.setndefault('playermpd', 'repeat_mode', 'alias', value='off').lower()
-        valid_replay_actions = ['toggle', 'toggle_repeat' ,'toggle_repeat_single', 'enable_repeat', 'enable_repeat_single', 'disable']
+        valid_replay_actions = [
+            'toggle',
+            'toggle_repeat',
+            'toggle_repeat_single',
+            'enable_repeat',
+            'enable_repeat_single',
+            'disable'
+        ]
 
         if cfg_repeat_action not in valid_replay_actions:
             logger.error(f"Config playermpd.replay_action must be one of {valid_replay_actions}. Ignoring setting.")
@@ -550,7 +557,7 @@ class PlayerMPD:
             logger.debug('Calling second swipe action for play_single')
             self.second_swipe_action()
             return
-        
+
         logger.debug('Calling first swipe action for play_single')
         with self.mpd_lock:
             self.mpd_client.clear()
@@ -677,13 +684,16 @@ class PlayerMPD:
         """
         # TODO: This changes the current state -> Need to save last state
         with self.mpd_lock:
-            logger.info(f"Play folder: '{folder}', current song: '{self.music_player_status['player_status'].get('CURRENTFILENAME')}'")
+            logger.info(
+                f"Play folder: '{folder}', current song: "
+                "'{self.music_player_status['player_status'].get('CURRENTFILENAME')}'"
+            )
             is_second_swipe = self.music_player_status['player_status'].get('last_played_folder') == folder
             if self.second_swipe_action is not None and is_second_swipe:
                 logger.debug('Calling second swipe action for play_folder')
                 self.second_swipe_action()
                 return
-            
+
             logger.debug('Calling first swipe action for play_folder')
             self.mpd_client.clear()
 

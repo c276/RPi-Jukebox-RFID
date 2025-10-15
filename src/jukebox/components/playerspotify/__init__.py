@@ -176,7 +176,6 @@ class PlayerSpotify:
         token_info = self.sp_oauth.get_access_token(code)
         return spotipy.Spotify(auth=token_info['access_token'])
 
-
     def refresh_access_token(self):
         token_info = self.sp_oauth.get_cached_token()
         if token_info and self.sp_oauth.is_token_expired(token_info):
@@ -381,7 +380,6 @@ class PlayerSpotify:
         if not self.device_id:
             return
         is_second_swipe = self.current_uri == song_url
-        playback = self.sp.current_playback()
 
         if is_second_swipe and self.second_swipe_action:
             logger.debug("Second swipe detected, resuming playback.")
@@ -401,7 +399,7 @@ class PlayerSpotify:
         if playback and playback["item"] and playback["progress_ms"]:
             current_position = playback["progress_ms"]
             track_duration = playback["item"]["duration_ms"]
-            jump_to = max(0, min(current_position + seconds*1000, track_duration - 1000))
+            jump_to = max(0, min(current_position + seconds * 1000, track_duration - 1000))
             self.seek(int(jump_to))
         else:
             self.logger.error("Cannot fast-forward: No track currently playing.")
@@ -416,7 +414,6 @@ class PlayerSpotify:
         self.stop()
         wave_obj = simpleaudio.WaveObject.from_wave_file(jingle_path)
         wave_obj.play()
-
 
     @plugs.tag
     def play_card(self, folder: str, recursive: bool = False):

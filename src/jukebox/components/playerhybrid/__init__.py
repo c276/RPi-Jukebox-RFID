@@ -139,7 +139,6 @@ class PlayerHybrid:
             self.set_current_player(self._player_mpd)
             self._player_spotify.stop()
         self.current_player.play_single(song_url)
-        
 
     @plugs.tag
     def resume(self):
@@ -231,10 +230,10 @@ class PlayerHybrid:
     def get_song_by_url(self, song_url):
         return self.current_player.get_song_by_url(song_url)
 
+
 # ---------------------------------------------------------------------------
 # Plugin Initializer / Finalizer
 # ---------------------------------------------------------------------------
-
 player_ctrl: PlayerHybrid
 #: Callback handler instance for play_card events.
 #: - is executed when play_card function is called

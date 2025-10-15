@@ -79,7 +79,8 @@ class CardRemovalTimerClass(threading.Thread):
             time.sleep(0.2)
             # This is the actual timer:
             # self.trigger.wait() aborts immediately when trigger.is_set becomes True
-            # the wait needs to be longer than the same_id_delay to avoid calling the timeout_action if the same card_id is still present
+            # the wait needs to be longer than the same_id_delay to avoid calling the timeout_action
+            # if the same card_id is still present
             self.trigger.wait(self.same_id_delay + 1.0)
             if self.trigger.is_set():
                 has_timed_out = False
@@ -127,8 +128,14 @@ class ReaderRunner(threading.Thread):
             self._cfg_place_not_swipe = False
         self._timer_thread = None
         if self._cfg_place_not_swipe:
-            self._timer_thread = CardRemovalTimerClass(utils.bind_rpc_command(self._default_removal_action, dereference=False,
-                                                                              logger=self._logger), same_id_delay=self._cfg_same_id_delay)
+            self._timer_thread = CardRemovalTimerClass(
+                utils.bind_rpc_command(
+                    self._default_removal_action,
+                    dereference=False,
+                    logger=self._logger
+                ),
+                same_id_delay=self._cfg_same_id_delay
+            )
             self._timer_thread.daemon = True
             self._timer_thread.name = f"{reader_cfg_key}CRemover"
             self._timer_thread.start()
@@ -225,8 +232,13 @@ class ReaderRunner(threading.Thread):
                                 rfid_card_detect_callbacks.run_callbacks(card_id, RfidCardDetectState.isRegistered)
                                 if card_id != previous_id:
                                     self._logger.debug(f"Running card action: {utils.rpc_call_to_str(card_action)}")
-                                    plugs.call_ignore_errors(card_action['package'], card_action['plugin'], card_action['method'],
-                                                         args=card_action['args'], kwargs=card_action['kwargs'])
+                                    plugs.call_ignore_errors(
+                                        card_action['package'],
+                                        card_action['plugin'],
+                                        card_action['method'],
+                                        args=card_action['args'],
+                                        wargs=card_action['kwargs']
+                                    )
 
                         else:
                             rfid_card_detect_callbacks.run_callbacks(card_id, RfidCardDetectState.isUnkown)
@@ -245,11 +257,18 @@ class ReaderRunner(threading.Thread):
                     # Time-out for reader internal error resulting in empty string: to be ignored
                     self._no_card_id_counter += 1
                     if self._no_card_id_counter <= self._cfg_allow_no_card_id_for_iterations and previous_id:
-                        self._logger.debug("Ignore no card detected (%dx), use previous card id: %s", self._no_card_id_counter, previous_id)
+                        self._logger.debug(
+                            "Ignore no card detected (%dx), use previous card id: %s",
+                            self._no_card_id_counter, previous_id
+                        )
                         self.publisher.send(self.topic, previous_id)
                         if valid_for_removal_action and self._timer_thread is not None:
                             # Still trigger the timer watchdog while assuming card is present
-                            self._logger.debug("Set timer trigger for card id '%s', no_card_id_counter: %d.", card_id, self._no_card_id_counter)
+                            self._logger.debug(
+                                "Set timer trigger for card id '%s', no_card_id_counter: %d.",
+                                card_id,
+                                self._no_card_id_counter
+                            )
                             self._timer_thread.trigger.set()
                     else:
                         self._logger.debug("No card detected, waiting for next card ...")
