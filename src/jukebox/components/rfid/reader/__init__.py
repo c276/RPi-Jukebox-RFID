@@ -230,15 +230,15 @@ class ReaderRunner(threading.Thread):
                                 # TODO: This call happens from the reader thread, which is not necessarily what we want ...
                                 # TODO: Change to RPC call to transfer execution into main thread
                                 rfid_card_detect_callbacks.run_callbacks(card_id, RfidCardDetectState.isRegistered)
-                                if card_id != previous_id:
-                                    self._logger.debug(f"Running card action: {utils.rpc_call_to_str(card_action)}")
-                                    plugs.call_ignore_errors(
-                                        card_action['package'],
-                                        card_action['plugin'],
-                                        card_action['method'],
-                                        args=card_action['args'],
-                                        wargs=card_action['kwargs']
-                                    )
+                                # if card_id != previous_id:
+                                self._logger.debug(f"Running card action: {utils.rpc_call_to_str(card_action)}")
+                                plugs.call_ignore_errors(
+                                    card_action['package'],
+                                    card_action['plugin'],
+                                    card_action['method'],
+                                    args=card_action['args'],
+                                    kwargs=card_action['kwargs']
+                                )
 
                         else:
                             rfid_card_detect_callbacks.run_callbacks(card_id, RfidCardDetectState.isUnkown)

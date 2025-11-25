@@ -23,7 +23,7 @@ modules:
   - misc
 pulse:
   # Reset system volume to this level after start. (Comment out disables and volume is not changed)
-  startup_volume: 30
+  startup_volume: 50
   # Automatically toggle output between primary and secondary audio output
   # when a device connects (Note: So far, toggle happens when ANY device connects)
   toggle_on_connect: true
@@ -140,7 +140,7 @@ timers:
     # If you want the box to shutdown on inactivity automatically, configure timeout_sec with a number of seconds (at least 60).
     # Inactivity is defined as: no music playing, no active SSH sessions, no changes in configs or audio content.
     # Activate with 15 minutes (900s) or 45 minutes (2700) timeout.
-    timeout_sec: 900
+    timeout_sec: 0
   # These timers are always disabled after start
   # The following values only give the default values.
   # These can be changed when enabling the respective timer on a case-by-case basis w/o saving
