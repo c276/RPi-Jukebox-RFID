@@ -55,3 +55,19 @@
   alias: play_single
   args:
   - Der-Drache-mit-dem-Wutproblem.mp3
+'1312735191962256':
+  alias: play_spotify
+  args:
+  - spotify:playlist:2AMg9eg9cE9kNQXZvOcmkb
+'1222570943517328':
+  alias: play_spotify
+  args:
+  - spotify:playlist:6RJYzVrAKxHsw1GAdiQqSB
+'1242366447784592':
+  alias: play_spotify
+  args:
+  - spotify:playlist:39SvtHJ8rIY1ifOd0D9Iot
+'1268750431883920':
+  alias: play_folder
+  args:
+  - Furzipups

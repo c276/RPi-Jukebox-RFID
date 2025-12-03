@@ -11,7 +11,7 @@ rfid:
         antenna_gain: 7
         log_all_cards: true
       same_id_delay: 1.0
-      allow_no_card_id_for_iterations: 1
+      allow_no_card_id_for_iterations: 0
       log_ignored_cards: false
       place_not_swipe:
         enabled: true
