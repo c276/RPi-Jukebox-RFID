@@ -245,6 +245,21 @@ play_card_callbacks: PlayContentCallbacks[PlayCardState]
 
 @plugs.initialize
 def initialize():
+    """Initialize hybrid controller when ``modules.named.player`` selects it.
+
+    The daemon configuration uses ``modules.named.player`` to pick the active
+    player implementation.  If the value is anything other than
+    ``playerhybrid`` we simply return without instantiating the controller.
+    This prevents the hybrid module from activating when, for example, the
+    plain MPD or Spotify player is desired, even though those modules may be
+    imported indirectly.
+    """
+
+    selected = cfg.getn('modules', 'named', {}).get('player')
+    if selected != 'playerhybrid':
+        logger.debug(f"configured player is '{selected}', skipping hybrid initializer")
+        return
+
     global player_ctrl
     player_ctrl = PlayerHybrid()
     plugs.register(player_ctrl, name='ctrl')

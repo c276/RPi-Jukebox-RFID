@@ -16,6 +16,7 @@ import time
 from typing import Optional
 
 import jukebox.plugs as plugs
+from components.playerhybrid.playcontentcallback import PlayContentCallbacks, PlayCardState
 import jukebox.cfghandler
 import jukebox.utils as utils
 from jukebox.NvManager import nv_manager
@@ -495,3 +496,46 @@ class PlayerSpotify:
     @plugs.tag
     def get_song_by_url(self, song_url):
         raise NotImplementedError
+
+
+# ---------------------------------------------------------------------------
+# Plugin Initializer / Finalizer
+# ---------------------------------------------------------------------------
+
+player_ctrl: PlayerSpotify
+#: Callback handler instance for play_card events.
+#: - is executed when play_card function is called
+#: States:
+#: - See :class:`PlayCardState`
+#: See :class:`PlayContentCallbacks`
+play_card_callbacks: PlayContentCallbacks[PlayCardState]
+
+
+@plugs.initialize
+
+def initialize():
+    """Create and register Spotify player if selected.
+
+    The module ``playerspotify`` may also be imported indirectly by the hybrid
+    player; we only register the plugin when ``modules.named.player`` equals
+    ``playerspotify``.  Otherwise the initializer returns silently.
+    """
+
+    selected = cfg.getn('modules', 'named', {}).get('player')
+    if selected != 'playerspotify':
+        logger.debug(f"configured player is '{selected}', skipping playerspotify initializer")
+        return
+
+    global player_ctrl
+    player_ctrl = PlayerSpotify()
+    plugs.register(player_ctrl, name='ctrl')
+
+    global play_card_callbacks
+    play_card_callbacks = PlayContentCallbacks[PlayCardState]('play_card_callbacks', logger, context=None)
+
+
+@plugs.atexit
+
+def atexit(**ignored_kwargs):
+    global player_ctrl
+    return player_ctrl.exit()
