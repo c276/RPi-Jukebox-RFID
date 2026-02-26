@@ -4,10 +4,10 @@ Package for interfacing with the Hybrid Music Player Daemon
 """
 
 import logging
+import subprocess
 import components.player
 import jukebox.cfghandler
 import jukebox.plugs as plugs
-import simpleaudio
 import misc
 
 
@@ -156,8 +156,7 @@ class PlayerHybrid:
         """
         # logger.debug('Playing jingle:', jingle_path)
         self.current_player.pause()
-        wave_obj = simpleaudio.WaveObject.from_wave_file(jingle_path)
-        wave_obj.play()
+        subprocess.run(['aplay', jingle_path])
 
     @plugs.tag
     def play_card(self, folder: str, recursive: bool = False):

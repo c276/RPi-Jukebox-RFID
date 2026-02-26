@@ -41,6 +41,3 @@ pydoc-markdown
 
 # MQTT
 paho-mqtt
-
-# simpleaudio for playing jingles
-simpleaudio>=1.0.4

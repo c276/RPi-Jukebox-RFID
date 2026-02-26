@@ -10,7 +10,7 @@ from spotipy.oauth2 import SpotifyOAuth
 from dataclasses import dataclass, asdict
 import os
 import logging
-import simpleaudio
+import subprocess
 import functools
 import time
 from typing import Optional
@@ -68,8 +68,7 @@ class SafeSpotifyWrapper:
                     return attr(*args, **kwargs)
                 except Exception as e:
                     logger.error(f"Spotify method '{name}' failed with: {e}")
-                    wave_obj = simpleaudio.WaveObject.from_wave_file(self._error_sound_path)
-                    wave_obj.play()
+                    subprocess.run(['aplay', self._error_sound_path])
                     self._first_error_time = time.time() if self._first_error_time == -1 else self._first_error_time
                     if self._first_error_time > -1 and time.time() - self._first_error_time > 60:
                         logger.error("Spotify API error occurred multiple times. Restarting spotifyd service.")
@@ -143,8 +142,7 @@ class PlayerSpotify:
         device_id = self.get_device_id()
         if not device_id:
             logger.error("No Spotify device found. Please check your Spotify setup.")
-            wave_obj = simpleaudio.WaveObject.from_wave_file(ERROR_SOUND_PATH)
-            wave_obj.play()
+            subprocess.run(['aplay', ERROR_SOUND_PATH])
             return None
         self._device_id = device_id
         return self._device_id
@@ -413,8 +411,7 @@ class PlayerSpotify:
         """
         logger.debug('Playing jingle:', jingle_path)
         self.stop()
-        wave_obj = simpleaudio.WaveObject.from_wave_file(jingle_path)
-        wave_obj.play()
+        subprocess.run(['aplay', jingle_path])
 
     @plugs.tag
     def play_card(self, folder: str, recursive: bool = False):

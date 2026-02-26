@@ -96,7 +96,7 @@ import jukebox.multitimer as multitimer
 import jukebox.publishing as publishing
 import jukebox.playlistgenerator as playlistgenerator
 import misc
-import simpleaudio
+import subprocess
 
 from jukebox.NvManager import nv_manager
 from .playcontentcallback import PlayContentCallbacks, PlayCardState
@@ -594,8 +594,7 @@ class PlayerMPD:
         logger.debug('Playing jingle:', jingle_path)
         with self.mpd_lock:
             self.mpd_client.stop()
-            wave_obj = simpleaudio.WaveObject.from_wave_file(jingle_path)
-            wave_obj.play()
+            subprocess.run(['aplay', jingle_path])
 
     @plugs.tag
     def play_card(self, folder: str, recursive: bool = False):
