@@ -81,7 +81,7 @@ class CardRemovalTimerClass(threading.Thread):
             # self.trigger.wait() aborts immediately when trigger.is_set becomes True
             # the wait needs to be longer than the same_id_delay to avoid calling the timeout_action
             # if the same card_id is still present
-            self.trigger.wait(self.same_id_delay + 1.0)
+            self.trigger.wait(self.same_id_delay + 0.1)
             if self.trigger.is_set():
                 has_timed_out = False
             else:
