@@ -59,7 +59,8 @@ def get_music_library_path():
 def get_player_module():
     """Get the active player component module"""
     cfg_main = jukebox.cfghandler.get_handler('jukebox')
-    player_name = cfg_main.getn('modules', 'named', {}).get('player', 'playerhybrid')
+    player_name = cfg_main.getn('modules', 'named', 'player', 'playerhybrid')
+    return
     try:
         player_module = importlib.import_module(f'components.{player_name}')
     except ImportError as e:

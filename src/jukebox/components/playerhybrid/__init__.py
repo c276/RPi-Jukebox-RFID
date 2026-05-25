@@ -241,46 +241,41 @@ player_ctrl: PlayerHybrid
 #: See :class:`PlayContentCallbacks`
 play_card_callbacks: PlayContentCallbacks[PlayCardState]
 
+selected = cfg.getn('modules', 'named', 'player')
+if selected == 'playerhybrid':
+    @plugs.initialize
+    def initialize():
+        """Initialize hybrid controller when ``modules.named.player`` selects it.
 
-@plugs.initialize
-def initialize():
-    """Initialize hybrid controller when ``modules.named.player`` selects it.
+        The daemon configuration uses ``modules.named.player`` to pick the active
+        player implementation.  If the value is anything other than
+        ``playerhybrid`` we simply return without instantiating the controller.
+        This prevents the hybrid module from activating when, for example, the
+        plain MPD or Spotify player is desired, even though those modules may be
+        imported indirectly.
+        """
+        global player_ctrl
+        player_ctrl = PlayerHybrid()
+        plugs.register(player_ctrl, name='ctrl')
 
-    The daemon configuration uses ``modules.named.player`` to pick the active
-    player implementation.  If the value is anything other than
-    ``playerhybrid`` we simply return without instantiating the controller.
-    This prevents the hybrid module from activating when, for example, the
-    plain MPD or Spotify player is desired, even though those modules may be
-    imported indirectly.
-    """
+        global play_card_callbacks
+        play_card_callbacks = PlayContentCallbacks[PlayCardState]('play_card_callbacks', logger, context=None)
 
-    selected = cfg.getn('modules', 'named', {}).get('player')
-    if selected != 'playerhybrid':
-        logger.debug(f"configured player is '{selected}', skipping hybrid initializer")
-        return
+        # Update mpc library
+        library_update = cfg.setndefault('playerhybrid', 'library', 'update_on_startup', value=True)
+        if library_update:
+            player_ctrl.update()
 
-    global player_ctrl
-    player_ctrl = PlayerHybrid()
-    plugs.register(player_ctrl, name='ctrl')
-
-    global play_card_callbacks
-    play_card_callbacks = PlayContentCallbacks[PlayCardState]('play_card_callbacks', logger, context=None)
-
-    # Update mpc library
-    library_update = cfg.setndefault('playerhybrid', 'library', 'update_on_startup', value=True)
-    if library_update:
-        player_ctrl.update()
-
-    # Check user rights on music library
-    library_check_user_rights = cfg.setndefault('playerhybrid', 'library', 'check_user_rights', value=True)
-    if library_check_user_rights is True:
-        music_library_path = components.player.get_music_library_path()
-        if music_library_path is not None:
-            logger.info(f"Change user rights for {music_library_path}")
-            misc.recursive_chmod(music_library_path, mode_files=0o666, mode_dirs=0o777)
+        # Check user rights on music library
+        library_check_user_rights = cfg.setndefault('playerhybrid', 'library', 'check_user_rights', value=True)
+        if library_check_user_rights is True:
+            music_library_path = components.player.get_music_library_path()
+            if music_library_path is not None:
+                logger.info(f"Change user rights for {music_library_path}")
+                misc.recursive_chmod(music_library_path, mode_files=0o666, mode_dirs=0o777)
 
 
-@plugs.atexit
-def atexit(**ignored_kwargs):
-    global player_ctrl
-    return player_ctrl.exit()
+    @plugs.atexit
+    def atexit(**ignored_kwargs):
+        global player_ctrl
+        return player_ctrl.exit()

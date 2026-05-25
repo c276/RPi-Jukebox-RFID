@@ -7,13 +7,11 @@ Provides class-based interface for Spotify control.
 
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
-from dataclasses import dataclass, asdict
 import os
 import logging
 import subprocess
 import functools
 import time
-from typing import Optional
 
 import jukebox.plugs as plugs
 from components.playerhybrid.playcontentcallback import PlayContentCallbacks, PlayCardState
@@ -508,31 +506,26 @@ player_ctrl: PlayerSpotify
 play_card_callbacks: PlayContentCallbacks[PlayCardState]
 
 
-@plugs.initialize
+selected = cfg.getn('modules', 'named', 'player')
+if selected == 'playerspotify':
+    @plugs.initialize
+    def initialize():
+        """Create and register Spotify player if selected.
 
-def initialize():
-    """Create and register Spotify player if selected.
+        The module ``playerspotify`` may also be imported indirectly by the hybrid
+        player; we only register the plugin when ``modules.named.player`` equals
+        ``playerspotify``.  Otherwise the initializer returns silently.
+        """
+        global player_ctrl
+        player_ctrl = PlayerSpotify()
+        plugs.register(player_ctrl, name='ctrl')
 
-    The module ``playerspotify`` may also be imported indirectly by the hybrid
-    player; we only register the plugin when ``modules.named.player`` equals
-    ``playerspotify``.  Otherwise the initializer returns silently.
-    """
-
-    selected = cfg.getn('modules', 'named', {}).get('player')
-    if selected != 'playerspotify':
-        logger.debug(f"configured player is '{selected}', skipping playerspotify initializer")
-        return
-
-    global player_ctrl
-    player_ctrl = PlayerSpotify()
-    plugs.register(player_ctrl, name='ctrl')
-
-    global play_card_callbacks
-    play_card_callbacks = PlayContentCallbacks[PlayCardState]('play_card_callbacks', logger, context=None)
+        global play_card_callbacks
+        play_card_callbacks = PlayContentCallbacks[PlayCardState]('play_card_callbacks', logger, context=None)
 
 
-@plugs.atexit
+    @plugs.atexit
 
-def atexit(**ignored_kwargs):
-    global player_ctrl
-    return player_ctrl.exit()
+    def atexit(**ignored_kwargs):
+        global player_ctrl
+        return player_ctrl.exit()
