@@ -27,6 +27,7 @@ CLIENT_SECRET_PATH = os.path.expanduser('~/.config/spotifyd/CLIENT_SECRET')
 REDIRECT_URI = 'https://example.com/callback'
 CACHE_PATH = os.path.expanduser('~/.cache/spotify_controller')
 ERROR_SOUND_PATH = '/home/pi/RPi-Jukebox-RFID/resources/audio/error.wav'
+LAST_PLAY_ERROR = -1
 
 SCOPE = (
     "user-modify-playback-state "
@@ -47,6 +48,14 @@ def read_secret(file_path):
         logger.error(f"Error reading secret from {file_path}: {e}")
         return None
 
+def play_error_sound():
+    # only play error sound every 30 seconds to avoid spamming the sound in case of repeated errors
+    global LAST_PLAY_ERROR, ERROR_SOUND_PATH
+    now = time.today()
+    if now - LAST_PLAY_ERROR > 30:
+        subprocess.run(['aplay', ERROR_SOUND_PATH])
+        LAST_PLAY_ERROR = now
+
 
 class SafeSpotifyWrapper:
     def __init__(self, spotipy_client, error_sound: str = ERROR_SOUND_PATH):
@@ -66,7 +75,7 @@ class SafeSpotifyWrapper:
                     return attr(*args, **kwargs)
                 except Exception as e:
                     logger.error(f"Spotify method '{name}' failed with: {e}")
-                    subprocess.run(['aplay', self._error_sound_path])
+                    play_error_sound()
                     self._first_error_time = time.time() if self._first_error_time == -1 else self._first_error_time
                     if self._first_error_time > -1 and time.time() - self._first_error_time > 60:
                         logger.error("Spotify API error occurred multiple times. Restarting spotifyd service.")
@@ -140,7 +149,7 @@ class PlayerSpotify:
         device_id = self.get_device_id()
         if not device_id:
             logger.error("No Spotify device found. Please check your Spotify setup.")
-            subprocess.run(['aplay', ERROR_SOUND_PATH])
+            play_error_sound()
             return None
         self._device_id = device_id
         return self._device_id
