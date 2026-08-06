@@ -13,6 +13,7 @@ import SelectAudio from './actions/audio';
 import { buildActionData } from '../utils';
 import SelectHost from './actions/host';
 import SelectSynchronisation from './actions/synchronisation';
+import SelectSpotify from './actions/play-spotify';
 
 const ControlsSelector = ({
   actionData,
@@ -65,6 +66,13 @@ const ControlsSelector = ({
           <SelectPlayMusic
             actionData={actionData}
             cardId={cardId}
+          />
+        }
+
+        {actionData.action === 'play_spotify' &&
+          <SelectSpotify
+            actionData={actionData}
+            handleActionDataChange={handleActionDataChange}
           />
         }
 

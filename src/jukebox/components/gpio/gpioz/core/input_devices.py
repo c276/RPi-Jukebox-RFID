@@ -367,6 +367,93 @@ class ShortLongPressButton(NameMixin, ButtonBase):
         self.on_long_press = self._decode_rpc_action('on_long_press', action_config)
 
 
+class CountingLongPressButton(ShortLongPressButton):
+    """
+    A button that runs a short action on short press, and on long press, accumulates the arguments every hold_repeat interval,
+    then calls the long action ONCE with the accumulated arguments when released.
+
+    - Short press: Calls short action with no arguments.
+    - Long press: While held, sets the internal counter +1 every hold_repeat interval,
+      accumulates the result, and on release, calls the long action ONCE with the sum as argument.
+
+    :param pull_up: See #Button
+    :param active_state: See #Button
+    :param bounce_time: See #Button
+    :param hold_time: Time in seconds to differentiate short/long press.
+    :param hold_repeat: If True, repeats the counting function every hold_time seconds.
+    :param name: See #Button
+    """
+
+    def __init__(
+        self,
+        pin=None,
+        *,
+        pull_up=True,
+        active_state=None,
+        bounce_time=None,
+        hold_time=1,
+        hold_repeat=False,
+        pin_factory=None,
+        name=None,
+    ):
+        super().__init__(
+            pin=pin,
+            pull_up=pull_up,
+            active_state=active_state,
+            bounce_time=bounce_time,
+            hold_time=hold_time,
+            hold_repeat=hold_repeat,
+            pin_factory=pin_factory,
+            name=name,
+        )
+
+        self._count = 0
+        # Override the button event handlers
+        self._button.when_pressed = self._on_activation
+        self._button.when_held = self._on_long_activation
+        self._button.when_released = self._on_deactivation
+
+        self._hold_action_callback = None
+
+    def _on_activation(self):
+        self._is_long_press = False
+        # reset the counter
+        self._count = 0
+
+    def _on_long_activation(self):
+        self._is_long_press = True
+        self._count += 1
+        if self._hold_action_callback:
+            self._hold_action_callback()
+
+    def _on_deactivation(self):
+        if not self._is_long_press and self._short_press_callback:
+            self._short_press_callback()
+        if self._is_long_press and self._long_press_callback:
+            new_args = [item * self._count for item in self._long_press_callback.args]
+            long_press_callback = functools.partial(
+                self._long_press_callback.func,  # use original function
+                *new_args,
+                **self._long_press_callback.keywords or {},  # use original keywords
+            )
+            long_press_callback()
+            # reset the counter
+            self._count = 0
+
+    @property
+    def hold_action(self):
+        return self._hold_action_callback
+
+    @hold_action.setter
+    def hold_action(self, func: Callable):
+        self._hold_action_callback = func
+
+    def set_rpc_actions(self, action_config):
+        self.on_short_press = self._decode_rpc_action('on_short_press', action_config)
+        self.on_long_press = self._decode_rpc_action('on_long_press', action_config)
+        self.hold_action = self._decode_rpc_action('hold_action', action_config)
+
+
 class RotaryEncoder(NameMixin):
     """
     A rotary encoder to run one of two actions depending on the rotation direction.

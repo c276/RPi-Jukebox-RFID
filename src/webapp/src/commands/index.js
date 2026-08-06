@@ -65,6 +65,12 @@ const commands = {
     method: 'play_single',
     argKeys: ['song_url']
   },
+  play_spotify: {
+    _package: 'player',
+    plugin: 'ctrl',
+    method: 'play_single',
+    argKeys: ['song_url']
+  },
   play_folder: {
     _package: 'player',
     plugin: 'ctrl',

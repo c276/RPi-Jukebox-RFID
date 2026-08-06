@@ -96,6 +96,7 @@ import jukebox.multitimer as multitimer
 import jukebox.publishing as publishing
 import jukebox.playlistgenerator as playlistgenerator
 import misc
+import subprocess
 
 from jukebox.NvManager import nv_manager
 from .playcontentcallback import PlayContentCallbacks, PlayCardState
@@ -239,6 +240,27 @@ class PlayerMPD:
 
     def connect(self):
         self.mpd_client.connect(self.mpd_host, 6600)
+
+    def decode_repeat_mode(self):
+        """
+        Decodes the replay action from the configuration file and sets it accordingly.
+        """
+        cfg_repeat_action = cfg.setndefault('playermpd', 'repeat_mode', 'alias', value='off').lower()
+        valid_replay_actions = [
+            'toggle',
+            'toggle_repeat',
+            'toggle_repeat_single',
+            'enable_repeat',
+            'enable_repeat_single',
+            'disable'
+        ]
+
+        if cfg_repeat_action not in valid_replay_actions:
+            logger.error(f"Config playermpd.replay_action must be one of {valid_replay_actions}. Ignoring setting.")
+        else:
+            self.repeat(cfg_repeat_action)
+
+        logger.info(f"Repeat action set to: {cfg_repeat_action}")
 
     def decode_2nd_swipe_option(self):
         cfg_2nd_swipe_action = cfg.setndefault('playermpd', 'second_swipe_action', 'alias', value='none').lower()
@@ -524,10 +546,26 @@ class PlayerMPD:
 
     @plugs.tag
     def play_single(self, song_url):
+        # Harmonize the song URL to ensure it matches the MPD database format
+        song_url = self.harmonize_mpd_url(song_url)
+
+        # Check if this is a second swipe
+        with self.mpd_lock:
+            is_second_swipe = self.music_player_status['player_status'].get('CURRENTFILENAME') == song_url
+
+        if self.second_swipe_action is not None and is_second_swipe:
+            logger.debug('Calling second swipe action for play_single')
+            self.second_swipe_action()
+            return
+
+        logger.debug('Calling first swipe action for play_single')
         with self.mpd_lock:
             self.mpd_client.clear()
             self.mpd_client.addid(song_url)
             self.mpd_client.play()
+        # Update the last played song in the status
+        self.music_player_status['player_status']['CURRENTFILENAME'] = song_url
+        self.music_player_status['player_status']['last_played_folder'] = ''
 
     @plugs.tag
     def resume(self):
@@ -536,6 +574,27 @@ class PlayerMPD:
             elapsed = self.current_folder_status["ELAPSED"]
             self.mpd_client.seek(songpos, elapsed)
             self.mpd_client.play()
+
+    @plugs.tag
+    def fast_forward(self, seconds: float = 1):
+        """ Fast forward the current song by a given number of seconds. Rewind if seconds is negative."""
+        with self.mpd_lock:
+            songpos = self.current_folder_status["CURRENTSONGPOS"]
+            elapsed = self.current_folder_status["ELAPSED"]
+            new_elapsed = float(elapsed) + seconds
+            self.mpd_client.seek(songpos, new_elapsed if new_elapsed > 0 else 0)
+            self.play()
+
+    @plugs.tag
+    def play_hold_jingle(self, jingle_path: str):
+        """
+        Play a jingle while the card is held on the reader.
+        This is used to indicate that the system is waiting for a second swipe or action.
+        """
+        logger.debug('Playing jingle:', jingle_path)
+        with self.mpd_lock:
+            self.mpd_client.stop()
+            subprocess.run(['aplay', jingle_path])
 
     @plugs.tag
     def play_card(self, folder: str, recursive: bool = False):
@@ -563,7 +622,7 @@ class PlayerMPD:
         with self.mpd_lock:
             is_second_swipe = self.music_player_status['player_status']['last_played_folder'] == folder
         if self.second_swipe_action is not None and is_second_swipe:
-            logger.debug('Calling second swipe action')
+            logger.debug('Calling second swipe action for play_card')
 
             # run callbacks before second_swipe_action is invoked
             play_card_callbacks.run_callbacks(folder, PlayCardState.secondSwipe)
@@ -624,7 +683,17 @@ class PlayerMPD:
         """
         # TODO: This changes the current state -> Need to save last state
         with self.mpd_lock:
-            logger.info(f"Play folder: '{folder}'")
+            logger.info(
+                f"Play folder: '{folder}', current song: "
+                "'{self.music_player_status['player_status'].get('CURRENTFILENAME')}'"
+            )
+            is_second_swipe = self.music_player_status['player_status'].get('last_played_folder') == folder
+            if self.second_swipe_action is not None and is_second_swipe:
+                logger.debug('Calling second swipe action for play_folder')
+                self.second_swipe_action()
+                return
+
+            logger.debug('Calling first swipe action for play_folder')
             self.mpd_client.clear()
 
             plc = playlistgenerator.PlaylistCollector(components.player.get_music_library_path())
@@ -751,6 +820,18 @@ class PlayerMPD:
             else:
                 return False
 
+    def reset_current_playback(self):
+        """
+        Reset the current playback state, i.e. clear the current song and reset the elapsed time.
+        This is used when a new folder is played or the playback is stopped.
+        """
+        self.current_folder_status = {}
+        self.music_player_status['player_status']['CURRENTSONGPOS'] = 0
+        self.music_player_status['player_status']['CURRENTFILENAME'] = ''
+        self.music_player_status['player_status']['ELAPSED'] = '0.0'
+        self.music_player_status['player_status']['last_played_folder'] = ''
+        self.music_player_status['player_status']['playback_state'] = 'stopped'
+
 
 # ---------------------------------------------------------------------------
 # Plugin Initializer / Finalizer
@@ -764,31 +845,45 @@ player_ctrl: PlayerMPD
 #: See :class:`PlayContentCallbacks`
 play_card_callbacks: PlayContentCallbacks[PlayCardState]
 
+# the standalone MPD plugin is still available; it will only register itself
+# when the configuration indicates that it is the selected player.  The daemon
+# sets ``modules.named.player`` to either ``playermpd``, ``playerhybrid`` or
+# another choice.  Hybrid mode imports this module as an implementation detail
+# but should not register a separate controller, hence the check below.
+selected = cfg.getn('modules', 'named', 'player')
+if selected == 'playermpd':
+    @plugs.initialize
+    def initialize():
+        """plugin initializer for the MPD player.
 
-@plugs.initialize
-def initialize():
-    global player_ctrl
-    player_ctrl = PlayerMPD()
-    plugs.register(player_ctrl, name='ctrl')
+        Only activate when ``modules.named.player`` is ``playermpd``.  If the value
+        is ``playerhybrid`` or anything else, the initializer returns early.  This
+        keeps the plugin registration unambiguous and removes the need for the
+        previous ``playermpd.enabled``/``playerhybrid.enabled`` flags.
+        """
+        global player_ctrl
+        player_ctrl = PlayerMPD()
+        plugs.register(player_ctrl, name='ctrl')
 
-    global play_card_callbacks
-    play_card_callbacks = PlayContentCallbacks[PlayCardState]('play_card_callbacks', logger, context=player_ctrl.mpd_lock)
+        global play_card_callbacks
+        play_card_callbacks = PlayContentCallbacks[PlayCardState](
+            'play_card_callbacks', logger, context=player_ctrl.mpd_lock)
 
-    # Update mpc library
-    library_update = cfg.setndefault('playermpd', 'library', 'update_on_startup', value=True)
-    if library_update:
-        player_ctrl.update()
+        # Update mpc library
+        library_update = cfg.setndefault('playermpd', 'library', 'update_on_startup', value=True)
+        if library_update:
+            player_ctrl.update()
 
-    # Check user rights on music library
-    library_check_user_rights = cfg.setndefault('playermpd', 'library', 'check_user_rights', value=True)
-    if library_check_user_rights is True:
-        music_library_path = components.player.get_music_library_path()
-        if music_library_path is not None:
-            logger.info(f"Change user rights for {music_library_path}")
-            misc.recursive_chmod(music_library_path, mode_files=0o666, mode_dirs=0o777)
+        # Check user rights on music library
+        library_check_user_rights = cfg.setndefault('playermpd', 'library', 'check_user_rights', value=True)
+        if library_check_user_rights is True:
+            music_library_path = components.player.get_music_library_path()
+            if music_library_path is not None:
+                logger.info(f"Change user rights for {music_library_path}")
+                misc.recursive_chmod(music_library_path, mode_files=0o666, mode_dirs=0o777)
 
 
-@plugs.atexit
-def atexit(**ignored_kwargs):
-    global player_ctrl
-    return player_ctrl.exit()
+    @plugs.atexit
+    def atexit(**ignored_kwargs):
+        global player_ctrl
+        return player_ctrl.exit()

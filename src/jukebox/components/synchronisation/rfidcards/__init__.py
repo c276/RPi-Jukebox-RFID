@@ -19,7 +19,6 @@ The local copy is kept to reduce unnecessary syncing.
 import logging
 import subprocess
 import components.player
-import components.playermpd
 import components.rfid.reader
 import components.synchronisation.syncutils as syncutils
 import jukebox.cfghandler
@@ -29,8 +28,6 @@ import os
 import shutil
 
 from components.rfid.reader import RfidCardDetectState
-from components.playermpd.playcontentcallback import PlayCardState
-
 
 logger = logging.getLogger('jb.sync_rfidcards')
 
@@ -73,7 +70,8 @@ class SyncRfidcards:
                     self._sync_remote_ssh_user = cfg_sync_rfidcards.getn('sync_rfidcards', 'credentials', 'username')
 
             components.rfid.reader.rfid_card_detect_callbacks.register(self._rfid_callback)
-            components.playermpd.play_card_callbacks.register(self._play_card_callback)
+            if components.player.get_player_module():
+                components.player.get_player_module().play_card_callbacks.register(self._play_card_callback)
         else:
             logger.info("Sync RFID cards deactivated")
 
@@ -84,8 +82,8 @@ class SyncRfidcards:
         if state == RfidCardDetectState.received:
             self.sync_card_database(card_id)
 
-    def _play_card_callback(self, folder: str, state: PlayCardState):
-        if state == PlayCardState.firstSwipe:
+    def _play_card_callback(self, folder: str, state):
+        if components.player.get_player_module() and state == components.player.get_player_module().PlayCardState.firstSwipe:
             self.sync_folder(folder)
 
     @plugs.tag

@@ -1,0 +1,14 @@
+[Unit]
+Description=Spotifyd (Spotify daemon)
+After=sound.target network.target
+
+[Service]
+ExecStart=/usr/local/bin/spotifyd --no-daemon --config-path /home/pi/RPi-Jukebox-RFID/shared/settings/spotifyd.conf
+Restart=always
+RestartSec=10
+Environment=PATH=/usr/bin:/bin
+Environment=XDG_RUNTIME_DIR=/run/user/%U
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/%U/bus
+
+[Install]
+WantedBy=default.target

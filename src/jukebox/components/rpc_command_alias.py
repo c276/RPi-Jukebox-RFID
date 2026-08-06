@@ -30,6 +30,12 @@ cmd_alias_definitions = {
         'package': 'player',
         'plugin': 'ctrl',
         'method': 'play_single'},
+    'play_spotify': {
+        'title': 'Play a single spotify song triggered by card swipe',
+        'note': "This function plays the content of a given spotify URI",
+        'package': 'player',
+        'plugin': 'ctrl',
+        'method': 'play_single'},
     'play_folder': {
         'title': 'Play a folder URL triggered by card swipe',
         'note': "This function plays the content of a given folder URL",
@@ -75,6 +81,20 @@ cmd_alias_definitions = {
         'method': 'repeat',
         'note': 'Repeat',
         'ignore_card_removal_action': True},
+    'fast_forward': {
+        'package': 'player',
+        'plugin': 'ctrl',
+        'method': 'fast_forward',
+        'note': 'FastForward',
+        'ignore_card_removal_action': True,
+    },
+    'play_hold_jingle': {
+        'package': 'player',
+        'plugin': 'ctrl',
+        'method': 'play_hold_jingle',
+        'note': 'PlayHoldJingle',
+        'ignore_card_removal_action': True,
+    },
     'flush_coverart_cache': {
         'package': 'player',
         'plugin': 'ctrl',

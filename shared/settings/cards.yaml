@@ -1,0 +1,85 @@
+'1196182664450704':
+  alias: play_spotify
+  args:
+  - spotify:playlist:0i4z94OvWz5cI2h6hSyEBw
+'3810619155':
+  alias: play_folder
+  args:
+  - Sing-mit-mir-Kinderlieder-2
+'1241266936156816':
+  alias: play_single
+  args:
+  - Sing-mit-mir-Kinderlieder-2/26 - Die Affen rasen durch den Wald.mp3
+# Spotify:
+# - spotify:playlist:0i4z94OvWz5cI2h6hSyEBw # Mattis Lieblingssongs
+# - spotify:playlist:5m1vPC45vK6zd2JDWRB1Dl # Schlaflieder Tonie - Fuchs
+# - spotify:playlist:4YROXhjdAiQV2rbSqvK7SO # Der Grüffelo und das Grüffelokind
+# - spotify:playlist:3cSPHwwmaZ4ZUFDHLeUUSf # Kinderlieder Mix
+# - spotify:playlist:3Y2mDWdni4h0AlsQzGn0x1 # Schlaflieder
+# - spotify:playlist:5vvdAx1u0rK43v1M3BzzJZ # Regenbogenfisch Hörspiel
+# - spotify:playlist:4ipXOmPWe4jXudhVcaSMme # Kinder Spiel- und Bewegungslieder
+# - spotify:playlist:7mMf5TZJ7HKXzBQ9zFx6gn # Petterson und Findus Liederalbum zur TV-Serie
+# - spotify:track:5WVnCEXZ58GEnS6QjpO2nI # Mah Na Mah Na
+# - spotify:track:3f6DYnGGotbf7JxF7jqK3I # Jimba Jimba
+# - spotify:track:1rVZFaoZxCMXmn7okw0ykM # Wir Fröschelein
+# - spotify:track:3y4rjMXrUQQiIQ3NaQJYPv # Sommersonnenspaß Petterson und Findus
+'1294039199322768':
+  alias: play_single
+  args:
+  - Sesame-Street-All-Time-Favorites-1/14 - Mah Na Mah Na.mp3
+'1291840176067216':
+  alias: play_single
+  args:
+  - Sing-mit-mir-Kinderlieder-2/26 - Die Affen rasen durch den Wald.mp3
+'1310536168706704':
+  alias: play_folder
+  args:
+  - Der-Grueffelo-und-das-Grueffelokind
+'1295138710950544':
+  alias: play_single
+  args:
+  - Sing-mit-mir-Kinderlieder-4/05 - Jimba, jimba.mp3
+'1345716245828240':
+  alias: play_spotify
+  args:
+  - spotify:playlist:5m1vPC45vK6zd2JDWRB1Dl # Schlaflieder Tonie - Fuchs
+'1342417710944912':
+  alias: play_spotify
+  args:
+  - spotify:playlist:6kGrcf0CtV6NYNoIFZkGFo # Rolfs Vogelhochzeit
+'1239067912901264':
+  alias: play_single
+  args:
+  - Die-30-besten-Spiel-und-Bewegungslieder/17 - Wir Fröschelein.mp3
+'1220371920261776':
+  alias: play_single
+  args:
+  - Der-Drache-mit-dem-Wutproblem.mp3
+'1312735191962256':
+  alias: play_spotify
+  args:
+  - spotify:playlist:2AMg9eg9cE9kNQXZvOcmkb # Wolf Märchen
+'1222570943517328':
+  alias: play_spotify
+  args:
+  - spotify:playlist:6RJYzVrAKxHsw1GAdiQqSB # Pumuckl - Spuk in der Werkstatt
+'1242366447784592':
+  alias: play_spotify
+  args:
+  - spotify:playlist:39SvtHJ8rIY1ifOd0D9Iot # Pippi Langstrumpf
+'1268750431883920':
+  alias: play_folder
+  args:
+  - Furzipups
+'1240167424529040':
+  alias: play_spotify
+  args:
+  - spotify:playlist:2dab8GnnKSzTEwaG23ywBd # Findus & Petterson - Geburtstagstorte für die Katze
+'1193983641195152':
+  alias: play_spotify
+  args:
+  - spotify:playlist:04paTgaKcuPEs4eCJOKGd5 # Wanja Hörspiel
+'1267650920256144':
+  alias: play_spotify
+  args:
+  - spotify:track:6BJpPLMiI4dTT8ZHRtx8YC # Ich habe einen kleinen Papagei

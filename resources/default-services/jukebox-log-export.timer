@@ -1,0 +1,10 @@
+[Unit]
+Description=Update jukebox log file every 5 minutes
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=5min
+Unit=jukebox-log-export.service
+
+[Install]
+WantedBy=timers.target

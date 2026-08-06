@@ -1,6 +1,7 @@
 import os
 import re
 import logging
+import importlib
 import jukebox.cfghandler
 from typing import Optional
 
@@ -53,3 +54,17 @@ def get_music_library_path():
     if _MUSIC_LIBRARY_PATH is None:
         _MUSIC_LIBRARY_PATH = MusicLibPath()
     return _MUSIC_LIBRARY_PATH.music_library_path
+
+
+def get_player_module():
+    """Get the active player component module"""
+    cfg_main = jukebox.cfghandler.get_handler('jukebox')
+    player_name = cfg_main.getn('modules', 'named', 'player', 'playerhybrid')
+    return
+    try:
+        player_module = importlib.import_module(f'components.{player_name}')
+    except ImportError as e:
+        # fallback to playerhybrid if the configured player module cannot be imported
+        player_module = importlib.import_module('components.playerhybrid')
+        logger.warning(f"Could not import player module '{player_name}': {e.__class__.__name__}: {e}. Falling back to 'playerhybrid'.")
+    return player_module
